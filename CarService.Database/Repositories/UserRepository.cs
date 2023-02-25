@@ -10,15 +10,17 @@ namespace CarService.Database.Repositories
     {
         private IMongoCollection<UserDb> _users; 
 
-        public UserRepository()
+        public UserRepository(MongoConnection connection)
         {
-            _users = MongoConnection.Database.GetCollection<UserDb>("Users");
+            _users = connection.Database.GetCollection<UserDb>("Users");
         }
 
         public async Task AddUserAsync(User user)
         {
             var userDb = new UserDb()
             {
+                Login = user.Login,
+                Password = user.Password,
                 Name = user.Name,
                 Surname = user.Surname,
                 Patronymic = user.Patronymic,
@@ -30,7 +32,7 @@ namespace CarService.Database.Repositories
             await _users.InsertOneAsync(userDb);
         }
 
-        public async Task<List<User>> GetAllUsers()
+        public async Task<List<User>> GetAllUsersAsync()
         {
             var users = await _users
                 .FindAsync<UserDb>(x => true);
@@ -40,6 +42,8 @@ namespace CarService.Database.Repositories
                 .Select(x => new User()
                 {
                     Id = x.Id.ToString(),
+                    Login = x.Login,
+                    Password = x.Password,
                     Name = x.Name,
                     Surname = x.Surname,
                     Patronymic = x.Patronymic,
@@ -59,6 +63,8 @@ namespace CarService.Database.Repositories
             return new User()
             {
                 Id = userInfo.Id.ToString(),
+                Login = userInfo.Login,
+                Password = userInfo.Password,
                 Name = userInfo.Name,
                 Surname = userInfo.Surname,
                 Patronymic = userInfo.Patronymic,

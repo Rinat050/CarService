@@ -6,6 +6,6 @@ namespace CarService.Domain.Repositories
     {
         public Task AddUserAsync(User user);
         public Task<User> GetUserByIdAsync(string id);
-        public Task<List<User>> GetAllUsers();
+        public Task<List<User>> GetAllUsersAsync();
     }
 }

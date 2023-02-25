@@ -2,9 +2,15 @@
 
 namespace CarService.Database
 {
-    public static class MongoConnection
+    public class MongoConnection
     {
-        private static readonly MongoClient Client = new MongoClient("mongodb://localhost");
-        public static readonly IMongoDatabase Database = Client.GetDatabase("CarService");
+        private MongoClient _client;
+        public IMongoDatabase Database;
+
+        public MongoConnection(string client, string database)
+        {
+            _client = new MongoClient(client);
+            Database = _client.GetDatabase(database);
+        }
     }
 }
