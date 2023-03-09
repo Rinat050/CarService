@@ -1,21 +1,51 @@
-﻿@inherits LayoutComponentBase
+﻿@using CarService.Domain.Services.Interfaces
+@inherits LayoutComponentBase
 
-<MudThemeProvider />
+@inject IUserService UserService
+
+<MudThemeProvider Theme="mainTheme"/>
 <MudDialogProvider />
 <MudSnackbarProvider />
 
 <MudLayout>
     <MudAppBar>
-         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())"/>
+         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Secondary" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())"/>
     </MudAppBar>
-    <MudDrawer @bind-Open="@_drawerOpen">
-        
+    <MudDrawer @bind-Open="@drawerOpen" ClipMode="clipMode" Breakpoint="@breakpoint" Elevation="1" Variant="@DrawerVariant.Responsive">
+        @if (UserService.CurrentUser is not null)
+        {
+            <MudNavMenu>
+                <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Group">Пользователи</MudNavLink>
+                <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.CarRental">Пользователи</MudNavLink>
+                <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Group">Пользователи</MudNavLink>
+            </MudNavMenu>
+        }
     </MudDrawer>
     <MudMainContent>
         @Body  
     </MudMainContent>
 </MudLayout>
-@code {  bool _drawerOpen = true;
 
- void DrawerToggle()  {  _drawerOpen = !_drawerOpen;  }
+@code {
+    MudTheme mainTheme = new MudTheme()
+    {
+        Palette = new Palette()
+        {
+            Primary = new MudBlazor.Utilities.MudColor("#1C49CF"),
+            Secondary = new MudBlazor.Utilities.MudColor("#E7E7E7"),
+            AppbarBackground = new MudBlazor.Utilities.MudColor("#1C49CF"),
+            DrawerIcon = new MudBlazor.Utilities.MudColor("#1C49CF"),
+            DrawerBackground = new MudBlazor.Utilities.MudColor("#E7E7E7"),
+            TextPrimary = new MudBlazor.Utilities.MudColor("#1C49CF"),
+            TextSecondary = new MudBlazor.Utilities.MudColor("#707277"),
+        }
+    };
+    bool drawerOpen = true;
+    Breakpoint breakpoint = Breakpoint.Sm;
+    DrawerClipMode clipMode = DrawerClipMode.Always;
+
+    void DrawerToggle()  
+    {  
+        drawerOpen = !drawerOpen; 
+    }
 }

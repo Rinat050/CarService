@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CarService.Database", "CarS
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CarService.Domain", "CarService.Domain\CarService.Domain.csproj", "{D4A6A47F-7276-4F54-A34F-89AEE183AC3E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CarService", "CarService\CarService.csproj", "{F49714AC-F258-491D-961B-C6668B97D1D3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CarService", "CarService\CarService.csproj", "{F49714AC-F258-491D-961B-C6668B97D1D3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -53,25 +53,57 @@ namespace CarService.Database.Repositories
                 }).ToList<User>();
         }
 
-        public async Task<User> GetUserByIdAsync(string id)
+        public async Task<User?> GetUserByIdAsync(string id)
         {
             var user = await _users
                 .FindAsync<UserDb>(x => x.Id.ToString() == id);
 
             var userInfo = user.FirstOrDefault();
 
-            return new User()
+            if (userInfo is not null)
             {
-                Id = userInfo.Id.ToString(),
-                Login = userInfo.Login,
-                Password = userInfo.Password,
-                Name = userInfo.Name,
-                Surname = userInfo.Surname,
-                Patronymic = userInfo.Patronymic,
-                Address = userInfo.Address,
-                PhoneNumber = userInfo.PhoneNumber,
-                Role = (Roles) userInfo.Role
-            };
+                return new User()
+                {
+                    Id = userInfo.Id.ToString(),
+                    Login = userInfo.Login,
+                    Password = userInfo.Password,
+                    Name = userInfo.Name,
+                    Surname = userInfo.Surname,
+                    Patronymic = userInfo.Patronymic,
+                    Address = userInfo.Address,
+                    PhoneNumber = userInfo.PhoneNumber,
+                    Role = (Roles)userInfo.Role
+                };
+            }
+
+
+            return null;
+        }
+
+        public async Task<User?> GetUserByLoginAndPasswordAsync(string login, string password)
+        {
+            var user = await _users
+                .FindAsync<UserDb>(x => x.Login == login && x.Password == password);
+
+            var userInfo = user.FirstOrDefault();
+
+            if (userInfo is not null)
+            {
+                return new User()
+                {
+                    Id = userInfo.Id.ToString(),
+                    Login = userInfo.Login,
+                    Password = userInfo.Password,
+                    Name = userInfo.Name,
+                    Surname = userInfo.Surname,
+                    Patronymic = userInfo.Patronymic,
+                    Address = userInfo.Address,
+                    PhoneNumber = userInfo.PhoneNumber,
+                    Role = (Roles)userInfo.Role
+                };
+            }
+
+            return null;
         }
     }
 }

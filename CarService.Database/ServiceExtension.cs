@@ -10,8 +10,8 @@ namespace CarService.Database
         {
             var mongoConnection = new MongoConnection("mongodb://localhost", "CarService");
 
-            services.AddScoped(_ => mongoConnection);
-            services.AddScoped<IUserRepository, UserRepository>();
+            services.AddSingleton(_ => mongoConnection);
+            services.AddSingleton<IUserRepository, UserRepository>();
 
             return services;
         }

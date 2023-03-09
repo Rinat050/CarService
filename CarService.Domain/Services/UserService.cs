@@ -8,6 +8,7 @@ namespace CarService.Domain.Services
     public class UserService : IUserService
     {
         private IUserRepository _userRepository;
+        public User CurrentUser { get; set; }
 
         public UserService(IUserRepository userRepository)
         {
@@ -51,6 +52,37 @@ namespace CarService.Domain.Services
             catch
             {
                 return new BaseResponse<List<User>>()
+                {
+                    Success = false,
+                    Description = "Внутренняя ошибка"
+                };
+            }
+        }
+
+        public async Task<BaseResponse<User>> GetUserByLoginAndPasswordAsync(string login, string password)
+        {
+            try
+            {
+                var user = await _userRepository.GetUserByLoginAndPasswordAsync(login, password);
+
+                if (user is not null)
+                {
+                    return new BaseResponse<User>()
+                    {
+                        Success = true,
+                        Data = user
+                    };
+                }
+
+                return new BaseResponse<User>()
+                {
+                    Success = false,
+                    Description = "Пользователь с такими данными не найден!"
+                };
+            }
+            catch
+            {
+                return new BaseResponse<User>()
                 {
                     Success = false,
                     Description = "Внутренняя ошибка"

@@ -8,7 +8,7 @@ namespace CarService.Domain
     {
         public static IServiceCollection AddDomain(this IServiceCollection services)
         {
-            services.AddScoped<IUserService, UserService>();
+            services.AddSingleton<IUserService, UserService>();
             services.AddScoped<IAuthorizationService, AuthorizationService>();
 
             return services;

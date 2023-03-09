@@ -16,9 +16,37 @@ namespace CarService.Domain.Services
             _userService = userService;
         }
 
-        public Task<BaseResponse<User>> LoginAsync(string login, string password)
+        public async Task<BaseResponse<User>> LoginAsync(string login, string password)
         {
-            throw new NotImplementedException();
+            try
+            {
+                var result = await _userService.GetUserByLoginAndPasswordAsync(login, HashPassword(password));
+
+                if (!result.Success)
+                {
+                    return new BaseResponse<User>()
+                    {
+                        Success = false,
+                        Description = result.Description,
+                    };
+                }
+
+                _userService.CurrentUser = result.Data!;
+
+                return new BaseResponse<User>()
+                {
+                    Success = true,
+                    Description = "Успешная авторизация!"
+                };
+            }
+            catch
+            {
+                return new BaseResponse<User>()
+                {
+                    Success = false,
+                    Description = "Внутренняя ошибка!"
+                };
+            }
         }
 
         public async Task<BaseResponse<User>> RegisterAsync(string login, string password, string name, string surname, 

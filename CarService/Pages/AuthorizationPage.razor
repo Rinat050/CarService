@@ -1,0 +1,50 @@
+﻿@page "/"
+@using CarService.Data
+@inject ISnackbar Snackbar
+@inject CarService.Domain.Services.Interfaces.IAuthorizationService AuthService
+
+<MudPaper Class="m-2 p-3" Elevation="3">
+    <MudText Typo="Typo.h6" Class="fw-bold">АВТОРИЗАЦИЯ</MudText>
+    
+    <EditForm Model="@_loginData" OnValidSubmit="OnValidSubmit">
+        <DataAnnotationsValidator/>
+        <MudGrid Spacing="0">
+            <MudItem xs="7" >
+                <MudTextField T="string" Label="Логин" @bind-Value="_loginData.Login" 
+                                For="@(() => _loginData.Login)"></MudTextField>
+            </MudItem>
+            <MudItem xs="7">
+                <MudTextField T="string" Label="Пароль" @bind-Value="_loginData.Password" 
+                                For="@(() => _loginData.Password)" InputType="InputType.Password"></MudTextField>
+            </MudItem>
+            <MudItem xs="7">
+                <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" 
+                Color="Color.Primary" Class="mt-4 fw-bold" FullWidth="true">ВОЙТИ</MudButton>
+            </MudItem>
+        </MudGrid>
+    </EditForm>
+</MudPaper>
+
+@code {
+    private LoginCredentials _loginData;
+
+    protected override Task OnInitializedAsync()
+    {
+        _loginData = new LoginCredentials();
+        return base.OnInitializedAsync();
+    }
+
+    private async void OnValidSubmit(EditContext context)
+    {
+        var result = await AuthService.LoginAsync(_loginData.Login, _loginData.Password);
+
+        if (result.Success)
+        {
+            Snackbar.Add(result.Description, Severity.Success);
+        }
+        else
+        {
+            Snackbar.Add(result.Description, Severity.Error);
+        }
+    }
+}

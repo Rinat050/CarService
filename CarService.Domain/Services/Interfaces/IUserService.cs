@@ -5,7 +5,10 @@ namespace CarService.Domain.Services.Interfaces
 {
     public interface IUserService
     {
+        public User CurrentUser { get; set; }
         public Task<BaseResponse<User>> CreateUserAsync(User user);
+
+        public Task<BaseResponse<User>> GetUserByLoginAndPasswordAsync(string login, string password);
 
         public Task<BaseResponse<List<User>>> GetAllUsersAsync();
     }
