@@ -9,5 +9,9 @@ namespace CarService.Domain.Services.Interfaces
         public Task<BaseResponse<User>> RegisterAsync(string login, string password, string name, string surname,
                                                      string patronymic, string address, string phone, Roles role);
         public Task<BaseResponse<User>> LoginAsync(string login, string password);
+
+        public Task<BaseResponse<User>> LogoutAsync();
+
+        public Task<BaseResponse<User>> ChangePasswordAsync(User user, string oldPassword, string newPassword);
     }
 }

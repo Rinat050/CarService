@@ -89,5 +89,80 @@ namespace CarService.Domain.Services
                 };
             }
         }
+
+        public async Task<BaseResponse<User>> UpdateUserAsync(User user)
+        {
+            try
+            {
+                var userDb = await _userRepository.GetUserByIdAsync(user.Id);
+
+                if (userDb is null)
+                {
+                    return new BaseResponse<User>()
+                    {
+                        Success = false,
+                        Description = "Пользователь не найден!"
+                    };
+                }
+
+                userDb = await _userRepository.GetUserByLoginAsync(user.Login);
+
+                if (userDb is not null && userDb.Id != user.Id)
+                {
+                    return new BaseResponse<User>()
+                    {
+                        Success = false,
+                        Description = "Пользователь с таким логином уже существует!"
+                    };
+                }
+
+                await _userRepository.UpdateUserAsync(user.Id, user);
+
+                return new BaseResponse<User>()
+                {
+                    Success = true,
+                    Description = "Данные пользователя успешно обновлены!"
+                };
+            }
+            catch
+            {
+                return new BaseResponse<User>()
+                {
+                    Success = false,
+                    Description = "Внутренняя ошибка!"
+                };
+            }
+        }
+
+        public async Task<BaseResponse<User>> GetUserByLoginAsync(string login)
+        {
+            try
+            {
+                var user = await _userRepository.GetUserByLoginAsync(login);
+
+                if (user is not null)
+                {
+                    return new BaseResponse<User>()
+                    {
+                        Success = true,
+                        Data = user
+                    };
+                }
+
+                return new BaseResponse<User>()
+                {
+                    Success = false,
+                    Description = "Пользователь с таким логином не найден!"
+                };
+            }
+            catch
+            {
+                return new BaseResponse<User>()
+                {
+                    Success = false,
+                    Description = "Внутренняя ошибка"
+                };
+            }
+        }
     }
 }

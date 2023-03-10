@@ -1,0 +1,116 @@
+﻿@page "/cabinet"
+@using CarService.Domain.Models
+@using CarService.Domain.Services.Interfaces
+@using System.Text.RegularExpressions
+
+@inject IUserService UserService
+@inject CarService.Domain.Services.Interfaces.IAuthorizationService AuthService
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject NavigationManager NavManager
+
+<MudPaper Class="m-2 p-3" Elevation="3">
+
+    @if (UserService.CurrentUser is null)
+    {
+        <MudAlert Variant="Variant.Outlined" ContentAlignment="HorizontalAlignment.Center" Severity="Severity.Warning">Необходимо авторизоваться!</MudAlert>
+    }
+    else
+    {
+        <MudText Typo="Typo.h6" Class="fw-bold">ЛИЧНЫЙ КАБИНЕТ</MudText>
+        <EditForm Model="@_currentUser" OnValidSubmit="SaveChanges">
+            <DataAnnotationsValidator/>
+            <MudGrid Spacing="2" Class="d-xxl-grid">
+                <MudItem xs="10">
+                    <MudTextField T="string" Label="Фамилия" 
+                        @bind-Value="_currentUser.Surname" For="@(() => _currentUser.Surname)"></MudTextField>
+                </MudItem>
+                <MudItem xs="5">
+                    <MudTextField T="string" Label="Имя"  
+                        @bind-Value="_currentUser.Name" For="@(() => _currentUser.Name)"></MudTextField>
+                </MudItem>
+                <MudItem xs="5">
+                    <MudTextField T="string" Label="Отчество" @bind-Value="_currentUser.Patronymic"></MudTextField>
+                </MudItem>
+                <MudItem xs="5">
+                    <MudTextField T="string" Label="Логин"
+                        @bind-Value="_currentUser.Login" For="@(() => _currentUser.Login)"></MudTextField>
+                </MudItem>
+                <MudItem xs="5">
+                    <MudTextField T="string" Label="Телефон" @bind-Value="_currentUser.PhoneNumber"></MudTextField>
+                </MudItem>
+                <MudItem xs="10">
+                    <MudTextField T="string" Label="Адрес" @bind-Value="_currentUser.Address"></MudTextField>
+                </MudItem>
+                <MudItem xs="4">
+                    <MudButton OnClick="@ChangePassword" Variant="Variant.Filled" Color="Color.Secondary" Class="mt-4" FullWidth="true">
+                        <MudText Color="Color.Primary" Class="fw-bold" Typo="Typo.button">СМЕНИТЬ ПАРОЛЬ</MudText>
+                    </MudButton>
+                </MudItem>
+                <MudItem xs="2">
+                    <MudButton OnClick="@Logout" Variant="Variant.Filled" Color="Color.Secondary" Class="mt-4 fw-bold" FullWidth="true">
+                        <MudText Color="Color.Primary" Class="fw-bold"  Typo="Typo.button">ВЫЙТИ</MudText>
+                    </MudButton>
+                </MudItem>
+                <MudItem xs="4">
+                    <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" 
+                        Color="Color.Primary" Class="mt-4 fw-bold" FullWidth="true">СОХРАНИТЬ</MudButton>
+                </MudItem>
+            </MudGrid>
+        </EditForm>
+    }      
+</MudPaper>
+
+@code {
+    private User _currentUser;
+
+    protected override Task OnInitializedAsync()
+    {
+        if (UserService.CurrentUser is not null)
+        {
+            _currentUser = UserService.CurrentUser;
+        }
+        else
+        {
+            _currentUser = new User();
+        }
+
+        return base.OnInitializedAsync();
+    }
+
+    private async Task SaveChanges()
+    {
+        var result = await UserService.UpdateUserAsync(_currentUser);
+
+        if (result.Success)
+        {
+            Snackbar.Add(result.Description, Severity.Success);
+        }
+        else
+        {
+            Snackbar.Add(result.Description, Severity.Warning);
+        }
+    }
+
+    private async Task Logout()
+    {
+        var result = await AuthService.LogoutAsync();
+
+        if (!result.Success)
+        {
+            Snackbar.Add(result.Description, Severity.Error);
+        }
+        else
+        {
+            NavManager.NavigateTo("/");
+        }
+    }
+
+    private async Task ChangePassword()
+    {
+        var parameters = new DialogParameters();
+
+        parameters.Add("User", UserService.CurrentUser);
+        DialogService.Show<ChangePasswordDialog>("Смена пароля", parameters);
+    }
+}

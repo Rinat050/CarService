@@ -4,7 +4,14 @@
 @inject IUserService UserService
 
 <MudThemeProvider Theme="mainTheme"/>
-<MudDialogProvider />
+<MudDialogProvider
+    FullWidth="true"
+    MaxWidth="MaxWidth.ExtraSmall"
+    CloseButton="true"
+    DisableBackdropClick="true"
+    Position="DialogPosition.Center"
+    CloseOnEscapeKey="true"
+/>
 <MudSnackbarProvider />
 
 <MudLayout>
@@ -15,9 +22,9 @@
         @if (UserService.CurrentUser is not null)
         {
             <MudNavMenu>
-                <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Group">Пользователи</MudNavLink>
-                <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.CarRental">Пользователи</MudNavLink>
-                <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Group">Пользователи</MudNavLink>
+                <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Group"><MudText Color="Color.Primary">Пользователи</MudText></MudNavLink>
+                <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.CarRental"><MudText Color="Color.Primary">Пользователи</MudText></MudNavLink>
+                <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Group"><MudText Color="Color.Primary">Пользователи</MudText></MudNavLink>
             </MudNavMenu>
         }
     </MudDrawer>

@@ -16,6 +16,52 @@ namespace CarService.Domain.Services
             _userService = userService;
         }
 
+        public async Task<BaseResponse<User>> ChangePasswordAsync(User user, string oldPassword, string newPassword)
+        {
+            try
+            {
+                var result = await _userService.GetUserByLoginAsync(user.Login);
+
+                if (!result.Success)
+                {
+                    return new BaseResponse<User>()
+                    {
+                        Success = false,
+                        Description = result.Description
+                    };
+                }
+
+                result = await _userService.GetUserByLoginAndPasswordAsync(user.Login, HashPassword(oldPassword));
+
+                if (!result.Success)
+                {
+                    return new BaseResponse<User>()
+                    {
+                        Success = false,
+                        Description = "Неверный пароль!"
+                    };
+                }
+
+                user.Password = HashPassword(newPassword);
+
+                await _userService.UpdateUserAsync(user);
+
+                return new BaseResponse<User>()
+                {
+                    Success = true,
+                    Description = "Пароль успешно обновлен"
+                };
+            }
+            catch
+            {
+                return new BaseResponse<User>()
+                {
+                    Success = false,
+                    Description = "Внутренняя ошибка!"
+                };
+            }
+        }
+
         public async Task<BaseResponse<User>> LoginAsync(string login, string password)
         {
             try
@@ -37,6 +83,28 @@ namespace CarService.Domain.Services
                 {
                     Success = true,
                     Description = "Успешная авторизация!"
+                };
+            }
+            catch
+            {
+                return new BaseResponse<User>()
+                {
+                    Success = false,
+                    Description = "Внутренняя ошибка!"
+                };
+            }
+        }
+
+        public async Task<BaseResponse<User>> LogoutAsync()
+        {
+            try
+            {
+                _userService.CurrentUser = null;
+
+                return new BaseResponse<User>()
+                {
+                    Success = true,
+                    Description = "Успешно!"
                 };
             }
             catch
