@@ -1,0 +1,45 @@
+﻿@page "/users"
+@using CarService.Domain.Models
+@using CarService.Domain.Services.Interfaces
+@using CarService.Extensions
+
+@inject IUserService UserService
+
+<MudPaper Class="m-2 p-3" Elevation="3">
+    <MudGrid>
+        <MudItem><MudText Typo="Typo.h6" Class="fw-bold" Color="Color.Primary">ПОЛЬЗОВАТЕЛИ</MudText></MudItem>
+        <MudSpacer/>
+        <MudItem>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary">
+                <MudText Typo="Typo.button" Class="fw-bold">ДОБАВИТЬ</MudText>
+            </MudButton>
+        </MudItem>
+    </MudGrid>
+
+    <MudTable Class="mt-5" Items="@_users" Hover="true" Breakpoint="Breakpoint.Sm" Loading="@_loading" LoadingProgressColor="Color.Info">
+        <HeaderContent>
+            <MudTh>Фамилия</MudTh>
+            <MudTh>Имя</MudTh>
+            <MudTh>Роль</MudTh>
+            <MudTh>Телефон</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Фамилия">@context.Surname</MudTd>
+            <MudTd DataLabel="Имя">@context.Name</MudTd>
+            <MudTd DataLabel="Роль">@context.Role.GetDisplayName()</MudTd>
+            <MudTd DataLabel="Телефон">@context.PhoneNumber</MudTd>
+        </RowTemplate>
+    </MudTable>
+</MudPaper>
+
+@code {
+    private List<User>? _users;
+    private bool _loading;
+
+    protected async override Task OnInitializedAsync()
+    {
+        var allUsers = await UserService.GetAllUsersAsync();
+
+        _users = allUsers.Data;
+    }
+}
