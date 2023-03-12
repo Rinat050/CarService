@@ -117,25 +117,14 @@ namespace CarService.Domain.Services
             }
         }
 
-        public async Task<BaseResponse<User>> RegisterAsync(string login, string password, string name, string surname, 
-                                                            string patronymic, string address, string phone, Roles role)
+        public async Task<BaseResponse<User>> RegisterAsync(string login, string password, 
+                                                    string name, string surname, Roles role)
         {
             try
             {
-                var result = await _userService.GetAllUsersAsync();
+                var result = await _userService.GetUserByLoginAsync(login);
 
-                if (!result.Success)
-                {
-                    return new BaseResponse<User>()
-                    {
-                        Success = false,
-                        Description = result.Description
-                    };
-                }
-
-                var userDb = result.Data?.FirstOrDefault(x => x.Login == login);
-
-                if (userDb is not null)
+                if (result.Success)
                 {
                     return new BaseResponse<User>()
                     {
@@ -150,9 +139,6 @@ namespace CarService.Domain.Services
                     Password = password,
                     Name = name,
                     Surname = surname,
-                    Patronymic = patronymic,
-                    Address = address,
-                    PhoneNumber = phone,
                     Role = role
                 };
 

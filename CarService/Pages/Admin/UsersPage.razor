@@ -4,17 +4,18 @@
 @using CarService.Extensions
 
 @inject IUserService UserService
+@inject IDialogService DialogService
 
 <MudPaper Class="m-2 p-3" Elevation="3">
     <MudGrid>
         <MudItem><MudText Typo="Typo.h6" Class="fw-bold" Color="Color.Primary">ПОЛЬЗОВАТЕЛИ</MudText></MudItem>
         <MudSpacer/>
         <MudItem>
-            <MudButton Variant="Variant.Filled" Color="Color.Primary">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@OpenDialog">
                 <MudText Typo="Typo.button" Class="fw-bold">ДОБАВИТЬ</MudText>
             </MudButton>
         </MudItem>
-    </MudGrid>
+    </MudGrid>  
 
     <MudTable Class="mt-5" Items="@_users" Hover="true" Breakpoint="Breakpoint.Sm" Loading="@_loading" LoadingProgressColor="Color.Info">
         <HeaderContent>
@@ -41,5 +42,10 @@
         var allUsers = await UserService.GetAllUsersAsync();
 
         _users = allUsers.Data;
+    }
+
+    private void OpenDialog()
+    {
+        DialogService.Show<CreateUserDialog>("Добавление пользователя");
     }
 }
