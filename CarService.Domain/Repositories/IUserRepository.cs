@@ -1,4 +1,5 @@
-﻿using CarService.Domain.Models;
+﻿using CarService.Domain.Enums;
+using CarService.Domain.Models;
 
 namespace CarService.Domain.Repositories
 {
@@ -9,6 +10,7 @@ namespace CarService.Domain.Repositories
         public Task<User?> GetUserByIdAsync(string id);
         public Task<User?> GetUserByLoginAsync(string login);
         public Task<List<User>> GetAllUsersAsync();
+        public Task<List<User>> GetUsersByRoleAsync(Roles role);
         public Task<User?> GetUserByLoginAndPasswordAsync(string login, string password);
     }
 }

@@ -62,6 +62,41 @@ namespace CarService.Domain.Services
             }
         }
 
+        public async Task<BaseResponse<User>> ChangePasswordAsync(User user, string newPassword)
+        {
+            try
+            {
+                var result = await _userService.GetUserByLoginAsync(user.Login);
+
+                if (!result.Success)
+                {
+                    return new BaseResponse<User>()
+                    {
+                        Success = false,
+                        Description = result.Description
+                    };
+                }
+
+                user.Password = HashPassword(newPassword);
+
+                await _userService.UpdateUserAsync(user);
+
+                return new BaseResponse<User>()
+                {
+                    Success = true,
+                    Description = "Пароль успешно обновлен"
+                };
+            }
+            catch
+            {
+                return new BaseResponse<User>()
+                {
+                    Success = false,
+                    Description = "Внутренняя ошибка!"
+                };
+            }
+        }
+
         public async Task<BaseResponse<User>> LoginAsync(string login, string password)
         {
             try

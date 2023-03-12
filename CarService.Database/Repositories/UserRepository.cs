@@ -135,6 +135,27 @@ namespace CarService.Database.Repositories
             return null;
         }
 
+        public async Task<List<User>> GetUsersByRoleAsync(Roles role)
+        {
+            var users = await _users
+                .FindAsync<UserDb>(x => x.Role == (int) role);
+
+            return users
+                .ToEnumerable()
+                .Select(x => new User()
+                {
+                    Id = x.Id.ToString(),
+                    Login = x.Login,
+                    Password = x.Password,
+                    Name = x.Name,
+                    Surname = x.Surname,
+                    Patronymic = x.Patronymic,
+                    Address = x.Address,
+                    PhoneNumber = x.PhoneNumber,
+                    Role = (Roles)x.Role
+                }).ToList<User>();
+        }
+
         public async Task UpdateUserAsync(string id, User user)
         {
             var userDb = new UserDb()

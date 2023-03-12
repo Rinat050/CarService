@@ -1,5 +1,7 @@
 ﻿@page "/users"
+@using CarService.Domain.Enums
 @using CarService.Domain.Models
+@using CarService.Domain.Response
 @using CarService.Domain.Services.Interfaces
 @using CarService.Extensions
 @using CarService.Shared.Dialogs
@@ -8,40 +10,60 @@
 @inject IDialogService DialogService
 
 <MudPaper Class="m-2 p-3" Elevation="3">
-    <MudGrid>
-        <MudItem><MudText Typo="Typo.h6" Class="fw-bold" Color="Color.Primary">ПОЛЬЗОВАТЕЛИ</MudText></MudItem>
-        <MudSpacer/>
-        <MudItem>
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@OpenCreateUserDialog">
-                <MudText Typo="Typo.button" Class="fw-bold">ДОБАВИТЬ</MudText>
-            </MudButton>
-        </MudItem>
-    </MudGrid>  
+    @if (UserService.CurrentUser is null)
+    {
+        <MudAlert Variant="Variant.Outlined" ContentAlignment="HorizontalAlignment.Center" Severity="Severity.Warning">Необходимо авторизоваться!</MudAlert>
+    }
+    else if(UserService.CurrentUser.Role is Domain.Enums.Roles.Admin){
+        <MudGrid>
+            <MudItem><MudText Typo="Typo.h6" Class="fw-bold" Color="Color.Primary">ПОЛЬЗОВАТЕЛИ</MudText></MudItem>
+            <MudSpacer/>
+            <MudItem>
+                <MudSelect T="Roles" AdornmentIcon="@Icons.Filled.Search"  ValueChanged="@(ChangeUserList)" Class="m-0 p-0" ToStringFunc="@_converter" Label="Роль" AnchorOrigin="Origin.BottomCenter" Clearable>
+                    @foreach (Roles role in Enum.GetValues(typeof(Roles)))
+                    {
+                        <MudSelectItem Value="role"/>   
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@OpenCreateUserDialog">
+                    <MudText Typo="Typo.button" Class="fw-bold">ДОБАВИТЬ</MudText>
+                </MudButton>
+            </MudItem>
+        </MudGrid>  
 
-    <MudTable Class="mt-5" Items="@_users" Hover="true" Breakpoint="Breakpoint.Sm" Loading="@_loading" LoadingProgressColor="Color.Info">
-        <HeaderContent>
-            <MudTh>Фамилия</MudTh>
-            <MudTh>Имя</MudTh>
-            <MudTh>Роль</MudTh>
-            <MudTh>Телефон</MudTh>
-            <MudTh>Изменение</MudTh>
-        </HeaderContent>
-        <RowTemplate>
-            <MudTd DataLabel="Фамилия">@context.Surname</MudTd>
-            <MudTd DataLabel="Имя">@context.Name</MudTd>
-            <MudTd DataLabel="Роль">@context.Role.GetDisplayName()</MudTd>
-            <MudTd DataLabel="Телефон">@context.PhoneNumber</MudTd>
-            @{
-                var user = (User) context;
-            }
-            <MudTd DataLabel="Изменение"><MudIconButton Icon="@Icons.Filled.Edit" OnClick="@(() => OpenEditUserDialog(user))" Size="Size.Medium"></MudIconButton></MudTd>
-        </RowTemplate>
+        <MudTable Class="mt-5" Items="@_users" Hover="true" Breakpoint="Breakpoint.Sm" Loading="@_loading" LoadingProgressColor="Color.Info">
+            <HeaderContent>
+                <MudTh>Фамилия</MudTh>
+                <MudTh>Имя</MudTh>
+                <MudTh>Роль</MudTh>
+                <MudTh>Телефон</MudTh>
+                <MudTh>Изменение</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Фамилия">@context.Surname</MudTd>
+                <MudTd DataLabel="Имя">@context.Name</MudTd>
+                <MudTd DataLabel="Роль">@context.Role.GetDisplayName()</MudTd>
+                <MudTd DataLabel="Телефон">@context.PhoneNumber</MudTd>
+                @{
+                    var user = (User) context;
+                }
+                <MudTd DataLabel="Изменение"><MudIconButton Icon="@Icons.Filled.Edit" OnClick="@(() => OpenEditUserDialog(user))" Size="Size.Medium"></MudIconButton></MudTd>
+            </RowTemplate>
     </MudTable>
+    }
+    else
+    {
+        <MudAlert Variant="Variant.Outlined" ContentAlignment="HorizontalAlignment.Center" Severity="Severity.Warning">Недостаточно прав!</MudAlert>
+    }
 </MudPaper>
 
 @code {
     private List<User>? _users;
     private bool _loading;
+    private Roles _searchRole;
+    readonly Func<Roles, string?> _converter = p => p.GetDisplayName();
 
     protected async override Task OnInitializedAsync()
     {
@@ -61,5 +83,23 @@
 
         parameters.Add("User", user);
         DialogService.Show<EditUserDialog>("Изменение пользователя", parameters);
+    }
+
+    private async void ChangeUserList(Roles role)
+    {
+        BaseResponse<List<User>> allUsers;
+
+        if (role == 0)
+        {
+            allUsers = await UserService.GetAllUsersAsync();
+        }
+        else
+        {
+            allUsers = await UserService.GetUsersByRoleAsync(role);
+        }
+
+        _users = allUsers.Data;
+
+        StateHasChanged();
     }
 }

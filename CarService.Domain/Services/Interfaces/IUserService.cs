@@ -1,4 +1,5 @@
-﻿using CarService.Domain.Models;
+﻿using CarService.Domain.Enums;
+using CarService.Domain.Models;
 using CarService.Domain.Response;
 
 namespace CarService.Domain.Services.Interfaces
@@ -16,5 +17,7 @@ namespace CarService.Domain.Services.Interfaces
         public Task<BaseResponse<User>> GetUserByLoginAsync(string login);
 
         public Task<BaseResponse<List<User>>> GetAllUsersAsync();
+
+        public Task<BaseResponse<List<User>>> GetUsersByRoleAsync(Roles role);
     }
 }

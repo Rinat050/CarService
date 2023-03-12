@@ -13,5 +13,7 @@ namespace CarService.Domain.Services.Interfaces
         public Task<BaseResponse<User>> LogoutAsync();
 
         public Task<BaseResponse<User>> ChangePasswordAsync(User user, string oldPassword, string newPassword);
+
+        public Task<BaseResponse<User>> ChangePasswordAsync(User user, string newPassword);
     }
 }

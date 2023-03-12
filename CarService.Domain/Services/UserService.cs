@@ -1,4 +1,5 @@
-﻿using CarService.Domain.Models;
+﻿using CarService.Domain.Enums;
+using CarService.Domain.Models;
 using CarService.Domain.Repositories;
 using CarService.Domain.Response;
 using CarService.Domain.Services.Interfaces;
@@ -158,6 +159,28 @@ namespace CarService.Domain.Services
             catch
             {
                 return new BaseResponse<User>()
+                {
+                    Success = false,
+                    Description = "Внутренняя ошибка"
+                };
+            }
+        }
+
+        public async Task<BaseResponse<List<User>>> GetUsersByRoleAsync(Roles role)
+        {
+            try
+            {
+                var users = await _userRepository.GetUsersByRoleAsync(role);
+
+                return new BaseResponse<List<User>>()
+                {
+                    Success = true,
+                    Data = users
+                };
+            }
+            catch
+            {
+                return new BaseResponse<List<User>>()
                 {
                     Success = false,
                     Description = "Внутренняя ошибка"
