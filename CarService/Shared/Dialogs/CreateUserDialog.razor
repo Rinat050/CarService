@@ -12,8 +12,8 @@
             <MudTextField T="string" Label="Фамилия" @bind-Value="_model.Surname" For="@(() => _model.Surname)"></MudTextField>
             <MudTextField T="string" Label="Имя" @bind-Value="_model.Name" For="@(() => _model.Name)"></MudTextField>
             <MudTextField T="string" Label="Логин" @bind-Value="_model.Login" For="@(() => _model.Login)"></MudTextField>
-            <MudTextField T="string" Label="Пароль" @bind-Value="_model.Password" For="@(() => _model.Password)"></MudTextField>
-            <MudTextField T="string" Label="Повтор пароля" @bind-Value="_model.RepeatPassword" For="@(() => _model.RepeatPassword)"></MudTextField>
+            <MudTextField T="string" InputType="InputType.Password" Label="Пароль" @bind-Value="_model.Password" For="@(() => _model.Password)"></MudTextField>
+            <MudTextField T="string" InputType="InputType.Password" Label="Повтор пароля" @bind-Value="_model.RepeatPassword" For="@(() => _model.RepeatPassword)"></MudTextField>
             <MudSelect @bind-Value="_model.Role" ToStringFunc="@_converter" Label="Роль" AnchorOrigin="Origin.BottomCenter" Clearable>
                 @foreach (Roles role in Enum.GetValues(typeof(Roles)))
                 {

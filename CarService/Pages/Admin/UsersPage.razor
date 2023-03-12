@@ -2,6 +2,7 @@
 @using CarService.Domain.Models
 @using CarService.Domain.Services.Interfaces
 @using CarService.Extensions
+@using CarService.Shared.Dialogs
 
 @inject IUserService UserService
 @inject IDialogService DialogService
@@ -11,7 +12,7 @@
         <MudItem><MudText Typo="Typo.h6" Class="fw-bold" Color="Color.Primary">ПОЛЬЗОВАТЕЛИ</MudText></MudItem>
         <MudSpacer/>
         <MudItem>
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@OpenDialog">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@OpenCreateUserDialog">
                 <MudText Typo="Typo.button" Class="fw-bold">ДОБАВИТЬ</MudText>
             </MudButton>
         </MudItem>
@@ -23,12 +24,17 @@
             <MudTh>Имя</MudTh>
             <MudTh>Роль</MudTh>
             <MudTh>Телефон</MudTh>
+            <MudTh>Изменение</MudTh>
         </HeaderContent>
         <RowTemplate>
             <MudTd DataLabel="Фамилия">@context.Surname</MudTd>
             <MudTd DataLabel="Имя">@context.Name</MudTd>
             <MudTd DataLabel="Роль">@context.Role.GetDisplayName()</MudTd>
             <MudTd DataLabel="Телефон">@context.PhoneNumber</MudTd>
+            @{
+                var user = (User) context;
+            }
+            <MudTd DataLabel="Изменение"><MudIconButton Icon="@Icons.Filled.Edit" OnClick="@(() => OpenEditUserDialog(user))" Size="Size.Medium"></MudIconButton></MudTd>
         </RowTemplate>
     </MudTable>
 </MudPaper>
@@ -44,8 +50,16 @@
         _users = allUsers.Data;
     }
 
-    private void OpenDialog()
+    private void OpenCreateUserDialog()
     {
         DialogService.Show<CreateUserDialog>("Добавление пользователя");
+    }
+
+    private void OpenEditUserDialog(User user)
+    {
+        var parameters = new DialogParameters();
+
+        parameters.Add("User", user);
+        DialogService.Show<EditUserDialog>("Изменение пользователя", parameters);
     }
 }

@@ -1,0 +1,95 @@
+﻿@using CarService.Domain.Models
+@using CarService.Domain.Services.Interfaces
+@using CarService.Shared.Dialogs
+
+@inject IUserService UserService
+@inject CarService.Domain.Services.Interfaces.IAuthorizationService AuthService
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject NavigationManager NavManager
+
+<MudDialog>
+    <DialogContent>
+        <EditForm Model="@User" OnValidSubmit="SaveChanges">
+            <DataAnnotationsValidator/>
+            <MudGrid Spacing="2">
+                <MudItem xs="12">
+                    <MudTextField T="string" Label="Фамилия" 
+                        @bind-Value="User.Surname" For="@(() => User.Surname)"></MudTextField>
+                </MudItem>
+                <MudItem xs="6">
+                    <MudTextField T="string" Label="Имя"  
+                        @bind-Value="User.Name" For="@(() => User.Name)"></MudTextField>
+                </MudItem>
+                <MudItem xs="6">
+                    <MudTextField T="string" Label="Отчество" @bind-Value="User.Patronymic"></MudTextField>
+                </MudItem>
+                <MudItem xs="6">
+                    <MudTextField T="string" Label="Логин"
+                        @bind-Value="User.Login" For="@(() => User.Login)"></MudTextField>
+                </MudItem>
+                <MudItem xs="6">
+                    <MudTextField T="string" Label="Телефон" @bind-Value="User.PhoneNumber"></MudTextField>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField T="string" Label="Адрес" @bind-Value="User.Address"></MudTextField>
+                </MudItem>
+                <MudItem xs="7">
+                    <MudButton OnClick="@ChangePassword" Variant="Variant.Filled" Color="Color.Secondary" Class="mt-4" FullWidth="true">
+                        <MudText Color="Color.Primary" Class="fw-bold" Typo="Typo.button">СМЕНИТЬ ПАРОЛЬ</MudText>
+                    </MudButton>
+                </MudItem>
+                <MudItem xs="5">
+                    <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" 
+                        Color="Color.Primary" Class="mt-4 fw-bold" FullWidth="true">СОХРАНИТЬ</MudButton>
+                </MudItem>
+            </MudGrid>
+        </EditForm>
+    </DialogContent>
+</MudDialog>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+
+    [Parameter] public User User { get; set; }
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+
+        if (User is null)
+        {
+            User = new User();
+        }
+    }
+
+    private void Close() => MudDialog.Close();
+
+    private async Task SaveChanges()
+    {
+        if (User is null)
+        {
+            return;
+        }
+
+        var result = await UserService.UpdateUserAsync(User);
+
+        if (result.Success)
+        {
+            Snackbar.Add(result.Description, Severity.Success);
+            Close();
+        }
+        else
+        {
+            Snackbar.Add(result.Description, Severity.Warning);
+        }
+    }
+
+    private void ChangePassword()
+    {
+        var parameters = new DialogParameters();
+
+        parameters.Add("User", User);
+        DialogService.Show<ChangePasswordDialog>("Смена пароля", parameters);
+    }
+}
