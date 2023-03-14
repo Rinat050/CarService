@@ -21,20 +21,22 @@
         <MudSpacer/>
         @if (UserService.CurrentUser is not null)
         {
-        <MudButton Color="Color.Secondary" Variant="Variant.Filled" 
-                OnClick="@(() => NavigationManager.NavigateTo("/cabinet"))">
-            <MudText Color="Color.Primary" Class="fw-bold" Typo="Typo.button">ЛИЧНЫЙ КАБИНЕТ</MudText>
-        </MudButton>
+            <MudButton Color="Color.Secondary" Variant="Variant.Filled" 
+                    OnClick="@(() => NavigationManager.NavigateTo("/cabinet"))">
+                <MudText Color="Color.Primary" Class="fw-bold" Typo="Typo.button">ЛИЧНЫЙ КАБИНЕТ</MudText>
+            </MudButton>
         }   
     </MudAppBar>
     <MudDrawer @bind-Open="@drawerOpen" ClipMode="clipMode" Breakpoint="@breakpoint" Elevation="1" Variant="@DrawerVariant.Responsive">
         @if (UserService.CurrentUser is not null)
         {
-            <MudNavMenu>
-                <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Group"><MudText Color="Color.Primary">Пользователи</MudText></MudNavLink>
-                <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.CarRental"><MudText Color="Color.Primary">Пользователи</MudText></MudNavLink>
-                <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Group"><MudText Color="Color.Primary">Пользователи</MudText></MudNavLink>
-            </MudNavMenu>
+            @if (UserService.CurrentUser.Role == Domain.Enums.Roles.Admin)
+            {
+                <MudNavMenu>
+                    <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.People" Href="/users"><MudText Color="Color.Primary">Пользователи</MudText></MudNavLink>
+                    <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.BrandingWatermark" Href="/brands"><MudText Color="Color.Primary">Бренды</MudText></MudNavLink>
+                </MudNavMenu>
+            }  
         }
     </MudDrawer>
     <MudMainContent>
