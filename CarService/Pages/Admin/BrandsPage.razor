@@ -1,0 +1,77 @@
+﻿@page "/brands"
+@using CarService.Domain.Enums
+@using CarService.Domain.Models
+@using CarService.Domain.Response
+@using CarService.Domain.Services.Interfaces
+@using CarService.Extensions
+@using CarService.Shared.Dialogs
+
+@inject IBrandService BrandService
+@inject IUserService UserService
+@inject IDialogService DialogService
+
+<MudPaper Class="m-2 p-3" Elevation="3">
+    @if (UserService.CurrentUser is null)
+    {
+        <MudAlert Variant="Variant.Outlined" ContentAlignment="HorizontalAlignment.Center" Severity="Severity.Warning">Необходимо авторизоваться!</MudAlert>
+    }
+    else if(UserService.CurrentUser.Role is Domain.Enums.Roles.Admin){
+        <MudGrid>
+            <MudItem><MudText Typo="Typo.h6" Class="fw-bold" Color="Color.Primary">БРЕНДЫ</MudText></MudItem>
+            <MudSpacer/>
+            <MudItem>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@OpenCreateBrandDialog">
+                    <MudText Typo="Typo.button" Class="fw-bold">ДОБАВИТЬ</MudText>
+                </MudButton>
+            </MudItem>
+        </MudGrid>  
+
+        <MudTable Class="mt-5" Items="@_brands" Hover="true" Breakpoint="Breakpoint.Sm">
+            <HeaderContent>
+                <MudTh>Название</MudTh>
+                <MudTh>Изменение</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Название">@context.Name</MudTd>
+                @{
+                    var brand = (Brand) context;
+                }
+                <MudTd DataLabel="Изменение"><MudIconButton Icon="@Icons.Filled.Edit" Size="Size.Medium" OnClick="@(() => OpenEditBrandDialog(brand))"></MudIconButton></MudTd>
+            </RowTemplate>
+    </MudTable>
+    }
+    else
+    {
+        <MudAlert Variant="Variant.Outlined" ContentAlignment="HorizontalAlignment.Center" Severity="Severity.Warning">Недостаточно прав!</MudAlert>
+    }
+</MudPaper>
+
+@code {
+    private List<Brand>? _brands;
+
+    protected async override Task OnInitializedAsync()
+    {
+        var allBrands = await BrandService.GetAllBrandsAsync();
+
+        _brands = allBrands.Data;
+    }
+
+    private void OpenCreateBrandDialog()
+    {
+        var parameters = new DialogParameters();
+
+        parameters.Add("IsNew", true);
+        DialogService.Show<EditBrandDialog>("Добавление бренда", parameters);
+    }
+
+    private void OpenEditBrandDialog(Brand brand)
+    {
+        var parameters = new DialogParameters();
+
+        parameters.Add("Brand", brand); 
+        var res = DialogService.Show<EditBrandDialog>("Изменение бренда", parameters);
+
+        if (res.Result.IsCompleted)
+        StateHasChanged();
+    }
+}

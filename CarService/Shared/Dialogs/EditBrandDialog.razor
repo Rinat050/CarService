@@ -1,0 +1,68 @@
+﻿@using CarService.Domain.Models
+@using CarService.Domain.Response
+@using CarService.Domain.Services.Interfaces
+
+@inject IBrandService BrandService
+@inject ISnackbar Snackbar
+
+<EditForm Model="Brand" OnValidSubmit="@CreateBrand">
+    <DataAnnotationsValidator/>
+    <MudDialog>
+        <DialogContent>
+            <MudTextField T="string" Label="Название" @bind-Value="Brand.Name" For="@(() => Brand.Name)"></MudTextField>
+        </DialogContent>
+        <DialogActions>
+            <MudButton OnClick="@Close">ОТМЕНА</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" ButtonType="ButtonType.Submit">СОХРАНИТЬ</MudButton>
+        </DialogActions>
+    </MudDialog>
+</EditForm>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+
+    [Parameter] public Brand Brand { get; set; } 
+    [Parameter] public bool IsNew { get; set; } 
+
+    private void Close() => MudDialog.Close();
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+
+        if (IsNew)
+        {
+            Brand = new Brand();
+            return;
+        }
+
+        if (Brand is null)
+        {
+            Brand = new Brand();
+        }
+    }
+
+    private async Task CreateBrand()
+    {
+        BaseResponse<Brand> result;
+
+        if (IsNew)
+        {
+            result = await BrandService.CreateBrandAsync(Brand);
+        }
+        else
+        {
+            result = await BrandService.UpdateBrandAsync(Brand);
+        }
+
+        if (result.Success)
+        {
+            Snackbar.Add(result.Description, Severity.Success);
+            Close();
+        }
+        else
+        {
+            Snackbar.Add(result.Description, Severity.Error);
+        }
+    }
+}

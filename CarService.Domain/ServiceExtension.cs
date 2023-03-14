@@ -10,6 +10,7 @@ namespace CarService.Domain
         {
             services.AddSingleton<IUserService, UserService>();
             services.AddScoped<IAuthorizationService, AuthorizationService>();
+            services.AddScoped<IBrandService, BrandService>();
 
             return services;
         }
