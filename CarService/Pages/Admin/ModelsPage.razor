@@ -1,0 +1,79 @@
+﻿@page "/models"
+@using CarService.Domain.Enums
+@using CarService.Domain.Models
+@using CarService.Domain.Response
+@using CarService.Domain.Services.Interfaces
+@using CarService.Extensions
+@using CarService.Shared.Dialogs
+
+@inject IModelService ModelService
+@inject IUserService UserService
+@inject IDialogService DialogService
+
+<MudPaper Class="m-2 p-3" Elevation="3">
+    @if (UserService.CurrentUser is null)
+    {
+        <MudAlert Variant="Variant.Outlined" ContentAlignment="HorizontalAlignment.Center" Severity="Severity.Warning">Необходимо авторизоваться!</MudAlert>
+    }
+    else if(UserService.CurrentUser.Role is Domain.Enums.Roles.Admin){
+        <MudGrid>
+            <MudItem><MudText Typo="Typo.h6" Class="fw-bold" Color="Color.Primary">МОДЕЛИ</MudText></MudItem>
+            <MudSpacer/>
+            <MudItem>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@OpenCreateModelDialog">
+                    <MudText Typo="Typo.button" Class="fw-bold">ДОБАВИТЬ</MudText>
+                </MudButton>
+            </MudItem>
+        </MudGrid>  
+
+        <MudTable Class="mt-5" Items="@_models" Hover="true" Breakpoint="Breakpoint.Sm">
+            <HeaderContent>
+                <MudTh>Название</MudTh>
+                <MudTh>Бренд</MudTh>
+                <MudTh>Изменение</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Название">@context.Name</MudTd>
+                <MudTd DataLabel="Бренд">@context.Brand.Name</MudTd>
+                @{
+                    var model = (Model) context;
+                }
+                <MudTd DataLabel="Изменение"><MudIconButton Icon="@Icons.Filled.Edit" Size="Size.Medium" OnClick="@(() => OpenEditModelDialog(model))"></MudIconButton></MudTd>
+            </RowTemplate>
+    </MudTable>
+    }
+    else
+    {
+        <MudAlert Variant="Variant.Outlined" ContentAlignment="HorizontalAlignment.Center" Severity="Severity.Warning">Недостаточно прав!</MudAlert>
+    }
+</MudPaper>
+
+@code {
+    private List<Model>? _models;
+
+    protected async override Task OnInitializedAsync()
+    {
+        var allModels = await ModelService.GetAllModelsAsync();
+
+        _models = allModels.Data;
+    }
+
+    private void OpenCreateModelDialog()
+    {
+        var parameters = new DialogParameters();
+
+        parameters.Add("IsNew", true);
+        DialogService.Show<EditModelDialog>("Добавление модели", parameters);
+    }
+
+    private void OpenEditModelDialog(Model model)
+    {
+        var parameters = new DialogParameters();
+
+        parameters.Add("Model", model); 
+        var res = DialogService.Show<EditModelDialog>("Изменение модели", parameters);
+
+        if (res.Result.IsCompleted)
+        StateHasChanged();
+    }
+}

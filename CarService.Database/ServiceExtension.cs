@@ -12,7 +12,8 @@ namespace CarService.Database
 
             services.AddSingleton(_ => mongoConnection);
             services.AddSingleton<IUserRepository, UserRepository>();
-            services.AddSingleton<IBrandRepository, BrandRepository>();
+            services.AddScoped<IBrandRepository, BrandRepository>();
+            services.AddScoped<IModelRepository, ModelRepository>();
 
             return services;
         }

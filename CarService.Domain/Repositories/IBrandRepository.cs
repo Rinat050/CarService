@@ -1,5 +1,5 @@
 ﻿using CarService.Domain.Models;
-using System;
+
 namespace CarService.Domain.Repositories
 {
     public interface IBrandRepository
@@ -11,6 +11,8 @@ namespace CarService.Domain.Repositories
         public Task<Brand> GetBrandByNameAsync(string name);
 
         public Task<Brand> GetBrandByIdAsync(string id);
+
+        public Brand GetBrandById(string id);
 
         public Task UpdateBrandAsync(string id, Brand brand);
     }
