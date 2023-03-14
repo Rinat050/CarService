@@ -1,0 +1,69 @@
+﻿@using CarService.Domain.Models
+@using CarService.Domain.Response
+@using CarService.Domain.Services.Interfaces
+
+@inject IRepairService RepairService
+@inject ISnackbar Snackbar
+
+<EditForm Model="Repair" OnValidSubmit="@CreateRepair">
+    <DataAnnotationsValidator/>
+    <MudDialog>
+        <DialogContent>
+            <MudTextField T="string" Label="Описание" @bind-Value="Repair.Description" For="@(() => Repair.Description)"></MudTextField>
+            <MudTextField T="int" Label="Стоимость" @bind-Value="Repair.Cost" For="@(() => Repair.Cost)"></MudTextField>
+        </DialogContent>
+        <DialogActions>
+            <MudButton OnClick="@Close">ОТМЕНА</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" ButtonType="ButtonType.Submit">СОХРАНИТЬ</MudButton>
+        </DialogActions>
+    </MudDialog>
+</EditForm>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+
+    [Parameter] public Repair Repair { get; set; } 
+    [Parameter] public bool IsNew { get; set; } 
+
+    private void Close() => MudDialog.Close();
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+
+        if (IsNew)
+        {
+            Repair = new Repair();
+            return;
+        }
+
+        if (Repair is null)
+        {
+            Repair = new Repair();
+        }
+    }
+
+    private async Task CreateRepair()
+    {
+        BaseResponse<Repair> result;
+
+        if (IsNew)
+        {
+            result = await RepairService.CreateRepairAsync(Repair);
+        }
+        else
+        {
+            result = await RepairService.UpdateRepairAsync(Repair);
+        }
+
+        if (result.Success)
+        {
+            Snackbar.Add(result.Description, Severity.Success);
+            Close();
+        }
+        else
+        {
+            Snackbar.Add(result.Description, Severity.Error);
+        }
+    }
+}

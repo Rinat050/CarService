@@ -13,6 +13,7 @@ namespace CarService.Domain
             services.AddScoped<IBrandService, BrandService>();
             services.AddScoped<IModelService, ModelService>();
             services.AddScoped<IDefectService, DefectService>();
+            services.AddScoped<IRepairService, RepairService>();
 
             return services;
         }

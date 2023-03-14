@@ -1,0 +1,79 @@
+﻿@page "/repairs"
+@using CarService.Domain.Enums
+@using CarService.Domain.Models
+@using CarService.Domain.Response
+@using CarService.Domain.Services.Interfaces
+@using CarService.Extensions
+@using CarService.Shared.Dialogs
+
+@inject IRepairService RepairService
+@inject IUserService UserService
+@inject IDialogService DialogService
+
+<MudPaper Class="m-2 p-3" Elevation="3">
+    @if (UserService.CurrentUser is null)
+    {
+        <MudAlert Variant="Variant.Outlined" ContentAlignment="HorizontalAlignment.Center" Severity="Severity.Warning">Необходимо авторизоваться!</MudAlert>
+    }
+    else if(UserService.CurrentUser.Role is Domain.Enums.Roles.Admin){
+        <MudGrid>
+            <MudItem><MudText Typo="Typo.h6" Class="fw-bold" Color="Color.Primary">РЕМОНТНЫЕ РАБОТЫ</MudText></MudItem>
+            <MudSpacer/>
+            <MudItem>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@OpenCreateRepairDialog">
+                    <MudText Typo="Typo.button" Class="fw-bold">ДОБАВИТЬ</MudText>
+                </MudButton>
+            </MudItem>
+        </MudGrid>  
+
+        <MudTable Class="mt-5" Items="@_repairs" Hover="true" Breakpoint="Breakpoint.Sm">
+            <HeaderContent>
+                <MudTh>Описание</MudTh>
+                <MudTh>Стоимость</MudTh>
+                <MudTh>Изменение</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Описание">@context.Description</MudTd>
+                <MudTd DataLabel="Стоимость">@context.Cost руб.</MudTd>
+                @{
+                    var repair = (Repair) context;
+                }
+                <MudTd DataLabel="Изменение"><MudIconButton Icon="@Icons.Filled.Edit" Size="Size.Medium" OnClick="@(() => OpenEditRepairDialog(repair))"></MudIconButton></MudTd>
+            </RowTemplate>
+    </MudTable>
+    }
+    else
+    {
+        <MudAlert Variant="Variant.Outlined" ContentAlignment="HorizontalAlignment.Center" Severity="Severity.Warning">Недостаточно прав!</MudAlert>
+    }
+</MudPaper>
+
+@code {
+    private List<Repair>? _repairs;
+
+    protected async override Task OnInitializedAsync()
+    {
+        var allRepairs = await RepairService.GetAllRepairsAsync();
+
+        _repairs = allRepairs.Data;
+    }
+
+    private void OpenCreateRepairDialog()
+    {
+        var parameters = new DialogParameters();
+
+        parameters.Add("IsNew", true);
+        DialogService.Show<EditRepairDialog>("Добавление ремонтной работы", parameters);
+    }
+
+    private void OpenEditRepairDialog(Repair repair)
+    {
+        var parameters = new DialogParameters();
+
+        parameters.Add("Repair", repair); 
+        var res = DialogService.Show<EditRepairDialog>("Изменение ремонтной работы", parameters);
+
+        if (res.Result.IsCompleted)
+        StateHasChanged();
+    }
+}
