@@ -1,0 +1,68 @@
+﻿@using CarService.Domain.Models
+@using CarService.Domain.Response
+@using CarService.Domain.Services.Interfaces
+
+@inject IDefectService DefectService
+@inject ISnackbar Snackbar
+
+<EditForm Model="Defect" OnValidSubmit="@CreateBrand">
+    <DataAnnotationsValidator/>
+    <MudDialog>
+        <DialogContent>
+            <MudTextField T="string" Label="Описание" @bind-Value="Defect.Description" For="@(() => Defect.Description)"></MudTextField>
+        </DialogContent>
+        <DialogActions>
+            <MudButton OnClick="@Close">ОТМЕНА</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" ButtonType="ButtonType.Submit">СОХРАНИТЬ</MudButton>
+        </DialogActions>
+    </MudDialog>
+</EditForm>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+
+    [Parameter] public Defect Defect { get; set; } 
+    [Parameter] public bool IsNew { get; set; } 
+
+    private void Close() => MudDialog.Close();
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+
+        if (IsNew)
+        {
+            Defect = new Defect();
+            return;
+        }
+
+        if (Defect is null)
+        {
+            Defect = new Defect();
+        }
+    }
+
+    private async Task CreateBrand()
+    {
+        BaseResponse<Defect> result;
+
+        if (IsNew)
+        {
+            result = await DefectService.CreateDefectAsync(Defect);
+        }
+        else
+        {
+            result = await DefectService.UpdateDefectAsync(Defect);
+        }
+
+        if (result.Success)
+        {
+            Snackbar.Add(result.Description, Severity.Success);
+            Close();
+        }
+        else
+        {
+            Snackbar.Add(result.Description, Severity.Error);
+        }
+    }
+}

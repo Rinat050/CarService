@@ -14,6 +14,7 @@ namespace CarService.Database
             services.AddSingleton<IUserRepository, UserRepository>();
             services.AddScoped<IBrandRepository, BrandRepository>();
             services.AddScoped<IModelRepository, ModelRepository>();
+            services.AddScoped<IDefectRepository, DefectRepository>();
 
             return services;
         }
