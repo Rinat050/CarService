@@ -1,0 +1,93 @@
+﻿@using CarService.Domain.Models
+@using CarService.Domain.Response
+@using CarService.Domain.Services.Interfaces
+
+@inject IModelService ModelService
+@inject ISparePartService SparePartService
+@inject ISnackbar Snackbar
+
+<EditForm Model="SparePart" OnValidSubmit="@CreateModel">
+    <DataAnnotationsValidator/>
+    <MudDialog>
+        <DialogContent>
+            @if (_models is not null)
+            {
+                <MudTextField T="string" Label="Артикул" @bind-Value="SparePart.Number" For="@(() => SparePart.Number)"></MudTextField>
+                <MudTextField T="string" Label="Название" @bind-Value="SparePart.Name" For="@(() => SparePart.Name)"></MudTextField>
+                <MudTextField T="int" Label="Стоимость" @bind-Value="SparePart.Price" For="@(() => SparePart.Price)"></MudTextField>
+                <MudSelect @bind-Value="SparePart.Model" For="@(() => SparePart.Model)" ToStringFunc="@_converter" Label="Модель автомобиля" AnchorOrigin="Origin.BottomCenter">
+                    @foreach (Model model in _models)
+                    {
+                        <MudSelectItem Value="model"></MudSelectItem>
+                    }
+                </MudSelect>
+            }
+        </DialogContent>
+        <DialogActions>
+            <MudButton OnClick="@Close">ОТМЕНА</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" ButtonType="ButtonType.Submit">СОХРАНИТЬ</MudButton>
+        </DialogActions>
+    </MudDialog>
+</EditForm>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+
+    [Parameter] public SparePart SparePart { get; set; } 
+    [Parameter] public bool IsNew { get; set; }
+
+    private List<Model> _models;
+
+    readonly Func<Model, string?> _converter = p => p?.Brand?.Name + " " + p?.Name;
+
+    private void Close() => MudDialog.Close();
+
+    protected async override Task OnInitializedAsync()
+    {
+        var result = await ModelService.GetAllModelsAsync();
+
+        _models = result.Data;
+    }
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+
+        if (IsNew)
+        {
+            SparePart = new SparePart();
+            return;
+        }
+
+        if (SparePart is null)
+        {
+            SparePart = new SparePart();
+        }
+    }
+
+    private async Task CreateModel()
+    {
+        BaseResponse<SparePart> result;
+
+        if (IsNew)
+        {
+            result = await SparePartService.CreateSparePartAsync(SparePart);
+        }
+        else
+        {
+            result = await SparePartService.UpdateSparePartAsync(SparePart);
+        }
+
+        if (result.Success)
+        {
+            Snackbar.Add(result.Description, Severity.Success);
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+        else
+        {
+            Snackbar.Add(result.Description, Severity.Error);
+        }
+    }
+}
+
+

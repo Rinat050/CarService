@@ -12,6 +12,8 @@ namespace CarService.Domain.Repositories
 
         public Task<Model> GetModelByIdAsync(string id);
 
+        public Model GetModelById(string id);
+
         public Task UpdateModelAsync(string id, Model model);
     }
 }

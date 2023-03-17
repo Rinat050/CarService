@@ -8,8 +8,10 @@ namespace CarService.Database.Models
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
         public ObjectId Id { get; set; }
+        public string Number { get; set; }
         public string? Name { get; set; }
         public int Price { get; set; }
         public string? ModelId { get; set; }
+        public int Count { get; set; }
     }
 }

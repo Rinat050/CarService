@@ -43,6 +43,28 @@ namespace CarService.Database.Repositories
                 }).ToList<Model>();
         }
 
+        public Model GetModelById(string id)
+        {
+            var filter = Builders<ModelDb>.Filter.Eq("_id", new ObjectId(id));
+
+            var models = _models
+                .Find<ModelDb>(filter);
+
+            var modelInfo = models.FirstOrDefault();
+
+            if (modelInfo is not null)
+            {
+                return new Model()
+                {
+                    Id = modelInfo.Id.ToString(),
+                    Name = modelInfo.Name,
+                    Brand = _brands.GetBrandById(modelInfo.BrandId)
+                };
+            }
+
+            return null;
+        }
+
         public async Task<Model> GetModelByIdAsync(string id)
         {
             var filter = Builders<ModelDb>.Filter.Eq("_id", new ObjectId(id));

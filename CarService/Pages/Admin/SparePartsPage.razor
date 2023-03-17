@@ -1,0 +1,132 @@
+﻿@page "/spareParts"
+@using CarService.Domain.Enums
+@using CarService.Domain.Models
+@using CarService.Domain.Response
+@using CarService.Domain.Services.Interfaces
+@using CarService.Extensions
+@using CarService.Shared.Dialogs
+
+@inject ISparePartService SparePartService
+@inject IModelService ModelService
+@inject IUserService UserService
+@inject IDialogService DialogService
+
+<MudPaper Class="m-2 p-3" Elevation="3">
+    @if (UserService.CurrentUser is null)
+    {
+        <MudAlert Variant="Variant.Outlined" ContentAlignment="HorizontalAlignment.Center" Severity="Severity.Warning">Необходимо авторизоваться!</MudAlert>
+    }
+    else if(UserService.CurrentUser.Role is Domain.Enums.Roles.Admin){
+        <MudGrid>
+            <MudItem><MudText Typo="Typo.h6" Class="fw-bold" Color="Color.Primary">ЗАПЧАСТИ</MudText></MudItem>
+            <MudSpacer/>
+            @if (_models is not null)
+            {
+                 <MudItem>
+                    <MudSelect T="Model" AdornmentIcon="@Icons.Filled.Search"  ValueChanged="@(ChangeSparePartsList)" Class="m-0 p-0" ToStringFunc="@_converter" Label="Модель" AnchorOrigin="Origin.BottomCenter" Clearable>
+                        @foreach (Model model in _models)
+                        {   
+                            <MudSelectItem Value="model"/>   
+                        }
+                    </MudSelect>
+                </MudItem>
+            }
+            <MudItem>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@OpenCreateSparePartlDialog">
+                    <MudText Typo="Typo.button" Class="fw-bold">ДОБАВИТЬ</MudText>
+                </MudButton>
+            </MudItem>
+        </MudGrid>  
+
+        <MudTable Class="mt-5" Items="@_spareParts" Hover="true" Breakpoint="Breakpoint.Sm">
+            <HeaderContent>
+                <MudTh>Название</MudTh>
+                <MudTh>Модель</MudTh>
+                <MudTh>Стоимость</MudTh>
+                <MudTh>Количество</MudTh>
+                <MudTh>Изменение</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Название">@context.Name</MudTd>
+                <MudTd DataLabel="Модель">@(context.Model.Brand.Name + " " + context.Model.Name)</MudTd>
+                <MudTd DataLabel="Стоимость">@context.Price руб.</MudTd>
+                <MudTd DataLabel="Количество">@context.Count</MudTd>
+                @{
+                    var sparePart = (SparePart) context;
+                }
+                <MudTd DataLabel="Изменение"><MudIconButton Icon="@Icons.Filled.Edit" Size="Size.Medium" OnClick="@(() => OpenEditModelDialog(sparePart))"></MudIconButton></MudTd>
+            </RowTemplate>
+    </MudTable>
+    }
+    else
+    {
+        <MudAlert Variant="Variant.Outlined" ContentAlignment="HorizontalAlignment.Center" Severity="Severity.Warning">Недостаточно прав!</MudAlert>
+    }
+</MudPaper>
+
+@code {
+    private List<SparePart>? _spareParts;
+    private List<Model> _models;
+
+    readonly Func<Model, string?> _converter = p => p?.Brand?.Name + " " + p?.Name;
+
+
+    protected async override Task OnInitializedAsync()
+    {
+        var allSpareParts = await SparePartService.GetAllSparePartsAsync();
+
+        _spareParts = allSpareParts.Data;
+
+        var result = await ModelService.GetAllModelsAsync();
+
+        _models = result.Data;
+    }
+
+    private async void OpenCreateSparePartlDialog()
+    {
+        var parameters = new DialogParameters();
+
+        parameters.Add("IsNew", true);
+        var res = await DialogService.ShowAsync<EditSparePartDialog>("Добавление запчасти", parameters);
+        var dialogResult = await res.Result;
+
+        if (!res.Result.IsCanceled)
+        {
+            var allSpareParts = await SparePartService.GetAllSparePartsAsync();
+
+            _spareParts = allSpareParts.Data;
+
+            StateHasChanged();
+        }
+    }
+
+    private async void OpenEditModelDialog(SparePart sparePart)
+    {
+        var parameters = new DialogParameters();
+
+        parameters.Add("SparePart", sparePart); 
+        var res = await DialogService.ShowAsync<EditSparePartDialog>("Изменение запчасти", parameters);
+        var dialogResult = await res.Result;
+
+        if (!res.Result.IsCanceled)
+        StateHasChanged();
+    }
+
+    private async void ChangeSparePartsList(Model model)
+    {
+        BaseResponse<List<SparePart>> allSpareParts;
+
+        if (model == null)
+        {
+            allSpareParts = await SparePartService.GetAllSparePartsAsync();
+        }
+        else
+        {
+            allSpareParts = await SparePartService.GetSparePartsByModelAsync(model);
+        }
+
+        _spareParts = allSpareParts.Data;
+
+        StateHasChanged();
+    }
+}
