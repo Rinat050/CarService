@@ -29,7 +29,7 @@
                         @bind-Value="User.Login" For="@(() => User.Login)"></MudTextField>
                 </MudItem>
                 <MudItem xs="6">
-                    <MudTextField T="string" Label="Телефон" @bind-Value="User.PhoneNumber"></MudTextField>
+                    <MudTextField T="string" InputType="InputType.Telephone" Label="Телефон" Mask="@(new PatternMask("+0 (000) 000 00-00"))" @bind-Value="User.PhoneNumber"></MudTextField>
                 </MudItem>
                 <MudItem xs="12">
                     <MudTextField T="string" Label="Адрес" @bind-Value="User.Address"></MudTextField>

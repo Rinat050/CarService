@@ -39,8 +39,17 @@
                     <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.CarCrash" Href="/defects"><MudText Color="Color.Primary">Неисправности</MudText></MudNavLink>
                     <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.CarRepair" Href="/repairs"><MudText Color="Color.Primary">Ремонтные работы</MudText></MudNavLink>
                     <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Settings" Href="/spareParts"><MudText Color="Color.Primary">Запчасти</MudText></MudNavLink>
+                    <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Group" Href="/clients"><MudText Color="Color.Primary">Клиенты</MudText></MudNavLink>
                 </MudNavMenu>
             }  
+
+            @if (UserService.CurrentUser.Role == Domain.Enums.Roles.Manager)
+            {
+                <MudNavMenu>
+                    <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Settings" Href="/spareParts"><MudText Color="Color.Primary">Запчасти</MudText></MudNavLink>
+                    <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.PeopleAlt" Href="/clients"><MudText Color="Color.Primary">Клиенты</MudText></MudNavLink>
+                </MudNavMenu>
+            }
         }
     </MudDrawer>
     <MudMainContent>

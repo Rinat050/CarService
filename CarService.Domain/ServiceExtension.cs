@@ -15,6 +15,7 @@ namespace CarService.Domain
             services.AddScoped<IDefectService, DefectService>();
             services.AddScoped<IRepairService, RepairService>();
             services.AddScoped<ISparePartService, SparePartService>();
+            services.AddScoped<IClientService, ClientService>();
 
             return services;
         }

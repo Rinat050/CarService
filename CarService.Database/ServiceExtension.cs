@@ -17,6 +17,7 @@ namespace CarService.Database
             services.AddScoped<IDefectRepository, DefectRepository>();
             services.AddScoped<IRepairRepository, RepairRepository>();
             services.AddScoped<ISparePartRepository, SparePartRepository>();
+            services.AddScoped<IClientRepository, ClientRepository>();
 
             return services;
         }

@@ -1,0 +1,94 @@
+﻿@page "/clients"
+@using CarService.Domain.Enums
+@using CarService.Domain.Models
+@using CarService.Domain.Response
+@using CarService.Domain.Services.Interfaces
+@using CarService.Extensions
+@using CarService.Shared.Dialogs
+
+@inject IClientService ClientService
+@inject IUserService UserService
+@inject IDialogService DialogService
+
+<MudPaper Class="m-2 p-3" Elevation="3">
+    @if (UserService.CurrentUser is null)
+    {
+        <MudAlert Variant="Variant.Outlined" ContentAlignment="HorizontalAlignment.Center" Severity="Severity.Warning">Необходимо авторизоваться!</MudAlert>
+    }
+    else if(UserService.CurrentUser.Role is Domain.Enums.Roles.Admin || UserService.CurrentUser.Role is Domain.Enums.Roles.Manager){
+        <MudGrid>
+            <MudItem><MudText Typo="Typo.h6" Class="fw-bold" Color="Color.Primary">КЛИЕНТЫ</MudText></MudItem>
+            <MudSpacer/>
+            <MudItem>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@OpenCreateClientlDialog">
+                    <MudText Typo="Typo.button" Class="fw-bold">ДОБАВИТЬ</MudText>
+                </MudButton>
+            </MudItem>
+        </MudGrid>  
+
+        <MudTable Class="mt-5" Items="@_clients" Hover="true" Breakpoint="Breakpoint.Sm">
+            <HeaderContent>
+                <MudTh>Фамилия</MudTh>
+                <MudTh>Имя</MudTh>
+                <MudTh>Отчество</MudTh>
+                <MudTh>Телефон</MudTh>
+                <MudTh>Изменение</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Фамилия">@context.Surname</MudTd>
+                <MudTd DataLabel="Имя">@context.Name</MudTd>
+                <MudTd DataLabel="Отчество">@context.Patronymic</MudTd>
+                <MudTd DataLabel="Телефон">@context.PhoneNumber</MudTd>
+                @{
+                    var client = (Client) context;
+                }
+                <MudTd DataLabel="Изменение"><MudIconButton Icon="@Icons.Filled.Edit" Size="Size.Medium" OnClick="@(() => OpenEditClientDialog(client))"></MudIconButton></MudTd>
+            </RowTemplate>
+    </MudTable>
+    }
+    else
+    {
+        <MudAlert Variant="Variant.Outlined" ContentAlignment="HorizontalAlignment.Center" Severity="Severity.Warning">Недостаточно прав!</MudAlert>
+    }
+</MudPaper>
+
+@code {
+    private List<Client>? _clients;
+
+    protected async override Task OnInitializedAsync()
+    {
+        var allClients = await ClientService.GetAllClientsAsync();
+
+        _clients = allClients.Data;
+    }
+
+    private async void OpenCreateClientlDialog()
+    {
+        var parameters = new DialogParameters();
+
+        parameters.Add("IsNew", true);
+        var res = await DialogService.ShowAsync<EditClientDialog>("Добавление клиента", parameters);
+        var dialogResult = await res.Result;
+
+        if (!res.Result.IsCanceled)
+        {
+            var allClients = await ClientService.GetAllClientsAsync();
+
+            _clients = allClients.Data;
+
+            StateHasChanged();
+        }
+    }
+
+    private async void OpenEditClientDialog(Client client)
+    {
+        var parameters = new DialogParameters();
+
+        parameters.Add("Client", client); 
+        var res = await DialogService.ShowAsync<EditClientDialog>("Изменение клиента", parameters);
+        var dialogResult = await res.Result;
+
+        if (!res.Result.IsCanceled)
+        StateHasChanged();
+    }
+}

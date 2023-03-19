@@ -1,0 +1,71 @@
+﻿@using CarService.Domain.Models
+@using CarService.Domain.Response
+@using CarService.Domain.Services.Interfaces
+
+@inject IClientService ClientService
+@inject ISnackbar Snackbar
+
+<EditForm Model="Client" OnValidSubmit="@CreateClient">
+    <DataAnnotationsValidator/>
+    <MudDialog>
+        <DialogContent>
+            <MudTextField T="string" Label="Фамилия" @bind-Value="Client.Surname" For="@(() => Client.Surname)"></MudTextField>
+            <MudTextField T="string" Label="Имя" @bind-Value="Client.Name" For="@(() => Client.Name)"></MudTextField>
+            <MudTextField T="string" Label="Отчество" @bind-Value="Client.Patronymic" For="@(() => Client.Patronymic)"></MudTextField>
+            <MudTextField T="string" InputType="InputType.Telephone" Label="Телефон" Mask="@(new PatternMask("+0 (000) 000 00-00"))" @bind-Value="Client.PhoneNumber" For="@(() => Client.PhoneNumber)"></MudTextField>
+        </DialogContent>
+        <DialogActions>
+            <MudButton OnClick="@Close">ОТМЕНА</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" ButtonType="ButtonType.Submit">СОХРАНИТЬ</MudButton>
+        </DialogActions>
+    </MudDialog>
+</EditForm>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+
+    [Parameter] public Client Client { get; set; } 
+    [Parameter] public bool IsNew { get; set; } 
+
+    private void Close() => MudDialog.Close();
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+
+        if (IsNew)
+        {
+            Client = new Client();
+            return;
+        }
+
+        if (Client is null)
+        {
+            Client = new Client();
+        }
+    }
+
+    private async Task CreateClient()
+    {
+        BaseResponse<Client> result;
+
+        if (IsNew)
+        {
+            result = await ClientService.CreateClientAsync(Client);
+        }
+        else
+        {
+            result = await ClientService.UpdateClientAsync(Client);
+        }
+
+        if (result.Success)
+        {
+            Snackbar.Add(result.Description, Severity.Success);
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+        else
+        {
+            Snackbar.Add(result.Description, Severity.Error);
+        }
+    }
+}
