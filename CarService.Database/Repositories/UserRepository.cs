@@ -54,6 +54,35 @@ namespace CarService.Database.Repositories
                 }).ToList<User>();
         }
 
+        public User? GetUserById(string id)
+        {
+            var filter = Builders<UserDb>.Filter.Eq("_id", new ObjectId(id));
+
+            var users = _users
+                .Find<UserDb>(filter);
+
+            var userInfo = users.FirstOrDefault();
+
+            if (userInfo is not null)
+            {
+                return new User()
+                {
+                    Id = userInfo.Id.ToString(),
+                    Login = userInfo.Login,
+                    Password = userInfo.Password,
+                    Name = userInfo.Name,
+                    Surname = userInfo.Surname,
+                    Patronymic = userInfo.Patronymic,
+                    Address = userInfo.Address,
+                    PhoneNumber = userInfo.PhoneNumber,
+                    Role = (Roles)userInfo.Role
+                };
+            }
+
+
+            return null;
+        }
+
         public async Task<User?> GetUserByIdAsync(string id)
         {
             var filter = Builders<UserDb>.Filter.Eq("_id", new ObjectId(id));

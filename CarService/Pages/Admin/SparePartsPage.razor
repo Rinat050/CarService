@@ -16,7 +16,7 @@
     {
         <MudAlert Variant="Variant.Outlined" ContentAlignment="HorizontalAlignment.Center" Severity="Severity.Warning">Необходимо авторизоваться!</MudAlert>
     }
-    else if(UserService.CurrentUser.Role is Domain.Enums.Roles.Admin){
+    else if(UserService.CurrentUser.Role is Domain.Enums.Roles.Admin || UserService.CurrentUser.Role is Domain.Enums.Roles.Manager){
         <MudGrid>
             <MudItem><MudText Typo="Typo.h6" Class="fw-bold" Color="Color.Primary">ЗАПЧАСТИ</MudText></MudItem>
             <MudSpacer/>

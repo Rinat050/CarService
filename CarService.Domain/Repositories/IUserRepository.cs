@@ -8,6 +8,7 @@ namespace CarService.Domain.Repositories
         public Task AddUserAsync(User user);
         public Task UpdateUserAsync(string id, User user);
         public Task<User?> GetUserByIdAsync(string id);
+        public User? GetUserById(string id);
         public Task<User?> GetUserByLoginAsync(string login);
         public Task<List<User>> GetAllUsersAsync();
         public Task<List<User>> GetUsersByRoleAsync(Roles role);
