@@ -1,0 +1,106 @@
+﻿@using CarService.Domain.Models
+@using CarService.Domain.Response
+@using CarService.Domain.Services.Interfaces
+
+@inject ICarService CarService
+@inject IModelService ModelService
+@inject IClientService ClientService
+@inject ISnackbar Snackbar
+
+<EditForm Model="Car" OnValidSubmit="@CreateCar">
+    <DataAnnotationsValidator/>
+    <MudDialog>
+        <DialogContent>
+            @if (_models is not null && _clients is not null)
+            {
+                <MudTextField T="string" Label="Гос - номер" @bind-Value="Car.StateNumber" For="@(() => Car.StateNumber)"></MudTextField>
+                <MudTextField T="string" Label="VIN - номер" @bind-Value="Car.VinNumber" For="@(() => Car.VinNumber)"></MudTextField>
+                <MudSelect @bind-Value="Car.Model" For="@(() => Car.Model)" ToStringFunc="@_modelConverter" Label="Модель" AnchorOrigin="Origin.BottomCenter">
+                    @foreach (Model model in _models)
+                    {
+                        <MudSelectItem Value="model"></MudSelectItem>
+                    }
+                </MudSelect>
+                <MudSelect @bind-Value="Car.Client" For="@(() => Car.Client)" ToStringFunc="@_clientConverter" Label="Владелец" AnchorOrigin="Origin.BottomCenter">
+                    @foreach (Client client in _clients)
+                    {
+                        <MudSelectItem Value="client"></MudSelectItem>
+                    }
+                </MudSelect>
+            }
+        </DialogContent>
+        <DialogActions>
+            <MudButton OnClick="@Close">ОТМЕНА</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" ButtonType="ButtonType.Submit">СОХРАНИТЬ</MudButton>
+        </DialogActions>
+    </MudDialog>
+</EditForm>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+
+    [Parameter] public Car Car { get; set; } 
+    [Parameter] public bool IsNew { get; set; }
+
+    private List<Model> _models = new();
+    private List<Client> _clients = new();
+
+    private IMask _stateNumberMask = new RegexMask(@"[АВЕКМНОРСТУХ] \d{3} [АВЕКМНОРСТУХ]{2} \d{2,3}$");
+    
+    readonly Func<Model, string?> _modelConverter = p => p?.Brand?.Name + " " + p?.Name;
+    readonly Func<Client, string?> _clientConverter = p => ($"{p?.Surname} {p?.Name} {p?.Patronymic}");
+
+    private void Close() => MudDialog.Close();
+
+    protected async override Task OnInitializedAsync()
+    {
+        var resultModels = await ModelService.GetAllModelsAsync();
+
+        _models = resultModels.Data;
+
+        var resultClients = await ClientService.GetAllClientsAsync();
+
+        _clients = resultClients.Data;
+    }
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+
+        if (IsNew)
+        {
+            Car = new Car();
+            return;
+        }
+
+        if (Car is null)
+        {
+            Car = new Car();
+        }
+    }
+
+    private async Task CreateCar()
+    {
+        BaseResponse<Car> result;
+
+        if (IsNew)
+        {
+            result = await CarService.CreateCarAsync(Car);
+        }
+        else
+        {
+            result = await CarService.UpdateCarAsync(Car);
+        }
+
+        if (result.Success)
+        {
+            Snackbar.Add(result.Description, Severity.Success);
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+        else
+        {
+            Snackbar.Add(result.Description, Severity.Error);
+        }
+    }
+}
+

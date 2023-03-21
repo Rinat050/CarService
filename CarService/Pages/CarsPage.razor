@@ -1,0 +1,123 @@
+﻿@page "/cars"
+@using CarService.Domain.Enums
+@using CarService.Domain.Models
+@using CarService.Domain.Response
+@using CarService.Domain.Services.Interfaces
+@using CarService.Extensions
+@using CarService.Shared.Dialogs
+
+@inject ICarService CarService
+@inject IClientService ClientService
+@inject IUserService UserService
+@inject IDialogService DialogService
+
+<MudPaper Class="m-2 p-3" Elevation="3">
+    @if (UserService.CurrentUser is null)
+    {
+        <MudAlert Variant="Variant.Outlined" ContentAlignment="HorizontalAlignment.Center" Severity="Severity.Warning">Необходимо авторизоваться!</MudAlert>
+    }
+    else if(UserService.CurrentUser.Role is Domain.Enums.Roles.Admin || UserService.CurrentUser.Role is Domain.Enums.Roles.Manager){
+        <MudGrid>
+            <MudItem><MudText Typo="Typo.h6" Class="fw-bold" Color="Color.Primary">АВТОМОБИЛИ</MudText></MudItem>
+            <MudSpacer/>
+            <MudItem>
+                @if (_clients != null)
+                {
+                    <MudSelect T="Client" AdornmentIcon="@Icons.Filled.Search" Value="_searchClient"  ValueChanged="@(ChangeCarList)" Class="m-0 p-0" ToStringFunc="@_clientConverter" Label="Владелец" AnchorOrigin="Origin.BottomCenter" Clearable>
+                        @foreach (Client client in _clients)
+                        {
+                            <MudSelectItem Value="client"/>   
+                        }
+                    </MudSelect>
+                }               
+            </MudItem>
+            <MudItem>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@OpenCreateCarDialog">
+                    <MudText Typo="Typo.button" Class="fw-bold">ДОБАВИТЬ</MudText>
+                </MudButton>
+            </MudItem>
+        </MudGrid>  
+
+        <MudTable Class="mt-5" Items="@_cars" Hover="true" Breakpoint="Breakpoint.Sm">
+            <HeaderContent>
+                <MudTh>Владелец</MudTh>
+                <MudTh>Гос - номер</MudTh>
+                <MudTh>Модель</MudTh>
+                <MudTh>Изменение</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Владелец">@($"{context.Client.Surname} {context.Client.Name} {context.Client.Patronymic}")</MudTd>
+                <MudTd DataLabel="Гос - номер">@context.StateNumber</MudTd>
+                <MudTd DataLabel="Модель">@($"{context.Model.Brand.Name} {context.Model.Name}")</MudTd>
+                @{
+                    var car = (Car) context;
+                }
+                <MudTd DataLabel="Изменение"><MudIconButton Icon="@Icons.Filled.Edit" OnClick="@(() => OpenEditCarDialog(car))" Size="Size.Medium"></MudIconButton></MudTd>
+            </RowTemplate>
+    </MudTable>
+    }
+    else
+    {
+        <MudAlert Variant="Variant.Outlined" ContentAlignment="HorizontalAlignment.Center" Severity="Severity.Warning">Недостаточно прав!</MudAlert>
+    }
+</MudPaper>
+
+@code {
+    private List<Car>? _cars;
+    private List<Client>? _clients;
+    private Client _searchClient;
+    readonly Func<Client, string?> _clientConverter = p => ($"{p?.Surname} {p?.Name} {p?.Patronymic}");
+
+    protected async override Task OnInitializedAsync()
+    {
+        var allCars = await CarService.GetAllCarsAsync();
+        _cars = allCars.Data;
+
+        var allClients = await ClientService.GetAllClientsAsync();
+        _clients = allClients.Data;
+    }
+
+    private async void OpenCreateCarDialog()
+    {
+        var parameters = new DialogParameters();
+
+        parameters.Add("IsNew", true);
+        var res = await DialogService.ShowAsync<EditCarDialog>("Добавление автомобиля", parameters);
+        var dialogResult = await res.Result;
+
+        if (!res.Result.IsCanceled)
+        {
+            _searchClient = null;
+            var allCars = await CarService.GetAllCarsAsync();
+            _cars = allCars.Data;
+            StateHasChanged();
+        }
+    }
+
+    private void OpenEditCarDialog(Car car)
+    {
+        var parameters = new DialogParameters();
+
+        parameters.Add("Car", car);
+        DialogService.Show<EditCarDialog>("Изменение автомобиля", parameters);
+    }
+
+    private async void ChangeCarList(Client client)
+    {
+        BaseResponse<List<Car>> allCars;
+
+        if (client == null)
+        {
+            allCars = await CarService.GetAllCarsAsync();
+        }
+        else
+        {
+            allCars = await CarService.GetCarsByClientAsync(client);
+        }
+
+        _searchClient = client;
+        _cars = allCars.Data;
+
+        StateHasChanged();
+    }
+}
