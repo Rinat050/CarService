@@ -13,7 +13,7 @@
         <DialogContent>
             @if (_models is not null && _clients is not null)
             {
-                <MudTextField T="string" Label="Гос - номер" @bind-Value="Car.StateNumber" For="@(() => Car.StateNumber)"></MudTextField>
+                <MudTextField Label="Гос - номер" @bind-Value="Car.StateNumber" For="@(() => Car.StateNumber)"></MudTextField>
                 <MudTextField T="string" Label="VIN - номер" @bind-Value="Car.VinNumber" For="@(() => Car.VinNumber)"></MudTextField>
                 <MudSelect @bind-Value="Car.Model" For="@(() => Car.Model)" ToStringFunc="@_modelConverter" Label="Модель" AnchorOrigin="Origin.BottomCenter">
                     @foreach (Model model in _models)
@@ -37,7 +37,7 @@
 </EditForm>
 
 @code {
-    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; } = null!;
 
     [Parameter] public Car Car { get; set; } 
     [Parameter] public bool IsNew { get; set; }
@@ -45,8 +45,6 @@
     private List<Model> _models = new();
     private List<Client> _clients = new();
 
-    private IMask _stateNumberMask = new RegexMask(@"[АВЕКМНОРСТУХ] \d{3} [АВЕКМНОРСТУХ]{2} \d{2,3}$");
-    
     readonly Func<Model, string?> _modelConverter = p => p?.Brand?.Name + " " + p?.Name;
     readonly Func<Client, string?> _clientConverter = p => ($"{p?.Surname} {p?.Name} {p?.Patronymic}");
 

@@ -8,7 +8,7 @@ namespace CarService.Database.Models
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
         public ObjectId Id { get; set; }
-        public string? ModelId { get; set; }
+        public string ModelId { get; set; } = null!;
         public string? StateNumber { get; set; }
         public string? VinNumber { get; set; }
         public string? ClientID { get; set; }

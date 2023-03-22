@@ -9,11 +9,11 @@ namespace CarService.Domain.Models
         public Model Model { get; set; }
 
         [Required(ErrorMessage = "Поле не может быть пустым!")]
-        [StringLength(12, MinimumLength = 11, ErrorMessage = "Минимум 8 символов!")]
+        [RegularExpression(@"^[АВЕКМНОРСТУХ] \d{3} [АВЕКМНОРСТУХ]{2} \d{2,3}$", ErrorMessage = "Формат номера: А 777 АА 716!")]
         public string StateNumber { get; set; }
 
         [Required(ErrorMessage = "Поле не может быть пустым!")]
-        [StringLength(17, MinimumLength = 17, ErrorMessage = "Необходимо 17 символов!")]
+        [RegularExpression(@"^[0123456789ABCDEFGHJKLMNPRSTUVWXYZ]{17}$", ErrorMessage = "Недопустимый формат VIN - номера!")]
         public string VinNumber { get; set; }
 
         [Required(ErrorMessage = "Выберите владельца!")]
