@@ -51,27 +51,43 @@
 
     protected async override Task OnInitializedAsync()
     {
+        await FillList();
+    }
+
+    private async Task FillList()
+    {
         var allDefects = await DefectService.GetAllDefectsAsync();
 
         _defects = allDefects.Data;
     }
 
-    private void OpenCreateDefectDialog()
+    private async Task OpenCreateDefectDialog()
     {
         var parameters = new DialogParameters();
 
         parameters.Add("IsNew", true);
-        DialogService.Show<EditDefectDialog>("Добавление неисправности", parameters);
+        var dialog = await DialogService.ShowAsync<EditDefectDialog>("Добавление неисправности", parameters);
+
+        var res = await dialog.Result;
+
+        if (!res.Canceled)
+        {
+            await FillList();
+        }
     }
 
-    private void OpenEditDefectDialog(Defect defect)
+    private async Task OpenEditDefectDialog(Defect defect)
     {
         var parameters = new DialogParameters();
 
         parameters.Add("Defect", defect); 
-        var res = DialogService.Show<EditDefectDialog>("Изменение неисправности", parameters);
+        var dialog = await DialogService.ShowAsync<EditDefectDialog>("Изменение неисправности", parameters);
 
-        if (res.Result.IsCompleted)
-        StateHasChanged();
+        var res = await dialog.Result;
+
+        if (!res.Canceled)
+        {
+            await FillList();
+        }
     }
 }

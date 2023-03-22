@@ -70,36 +70,47 @@
 
     protected async override Task OnInitializedAsync()
     {
-        var allCars = await CarService.GetAllCarsAsync();
-        _cars = allCars.Data;
-
         var allClients = await ClientService.GetAllClientsAsync();
         _clients = allClients.Data;
+
+        await FillList();
     }
 
-    private async void OpenCreateCarDialog()
+    private async Task FillList()
+    {
+        _searchClient = null!;
+        var allCars = await CarService.GetAllCarsAsync();
+        _cars = allCars.Data;
+    }
+
+    private async Task OpenCreateCarDialog()
     {
         var parameters = new DialogParameters();
 
         parameters.Add("IsNew", true);
-        var res = await DialogService.ShowAsync<EditCarDialog>("Добавление автомобиля", parameters);
-        var dialogResult = await res.Result;
+        var dialog = await DialogService.ShowAsync<EditCarDialog>("Добавление автомобиля", parameters);
 
-        if (!res.Result.IsCanceled)
+        var res = await dialog.Result;
+
+        if (!res.Canceled)
         {
-            _searchClient = null;
-            var allCars = await CarService.GetAllCarsAsync();
-            _cars = allCars.Data;
-            StateHasChanged();
+            await FillList();
         }
     }
 
-    private void OpenEditCarDialog(Car car)
+    private async Task OpenEditCarDialog(Car car)
     {
         var parameters = new DialogParameters();
 
         parameters.Add("Car", car);
-        DialogService.Show<EditCarDialog>("Изменение автомобиля", parameters);
+        var dialog = await DialogService.ShowAsync<EditCarDialog>("Изменение автомобиля", parameters);
+
+        var res = await dialog.Result;
+
+        if (!res.Canceled)
+        {
+            await FillList();
+        }
     }
 
     private async void ChangeCarList(Client client)

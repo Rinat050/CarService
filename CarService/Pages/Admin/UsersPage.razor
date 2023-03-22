@@ -19,7 +19,7 @@
             <MudItem><MudText Typo="Typo.h6" Class="fw-bold" Color="Color.Primary">ПОЛЬЗОВАТЕЛИ</MudText></MudItem>
             <MudSpacer/>
             <MudItem>
-                <MudSelect T="Roles" AdornmentIcon="@Icons.Filled.Search"  ValueChanged="@(ChangeUserList)" Class="m-0 p-0" ToStringFunc="@_converter" Label="Роль" AnchorOrigin="Origin.BottomCenter" Clearable>
+                <MudSelect T="Roles" Value="@_searchRole" AdornmentIcon="@Icons.Filled.Search"  ValueChanged="@(ChangeUserList)" Class="m-0 p-0" ToStringFunc="@_converter" Label="Роль" AnchorOrigin="Origin.BottomCenter" Clearable>
                     @foreach (Roles role in Enum.GetValues(typeof(Roles)))
                     {
                         <MudSelectItem Value="role"/>   
@@ -67,22 +67,40 @@
 
     protected async override Task OnInitializedAsync()
     {
-        var allUsers = await UserService.GetAllUsersAsync();
-
-        _users = allUsers.Data;
+        await FillList();
     }
 
-    private void OpenCreateUserDialog()
+    private async Task FillList()
     {
-        DialogService.Show<CreateUserDialog>("Добавление пользователя");
+        var allUsers = await UserService.GetAllUsersAsync();
+        _users = allUsers.Data;
+        _searchRole = 0;
     }
 
-    private void OpenEditUserDialog(User user)
+    private async Task OpenCreateUserDialog()
+    {
+        var dialog = await DialogService.ShowAsync<CreateUserDialog>("Добавление пользователя");
+
+        var res = await dialog.Result;
+
+        if (!res.Canceled)
+        {
+            await FillList();
+        }
+    }
+
+    private async Task OpenEditUserDialog(User user)
     {
         var parameters = new DialogParameters();
 
         parameters.Add("User", user);
-        DialogService.Show<EditUserDialog>("Изменение пользователя", parameters);
+        var dialog = await DialogService.ShowAsync<EditUserDialog>("Изменение пользователя", parameters);
+        var res = await dialog.Result;
+
+        if (!res.Canceled)
+        {
+            await FillList();
+        }
     }
 
     private async void ChangeUserList(Roles role)
@@ -91,10 +109,12 @@
 
         if (role == 0)
         {
+            _searchRole = 0;
             allUsers = await UserService.GetAllUsersAsync();
         }
         else
         {
+            _searchRole = role;
             allUsers = await UserService.GetUsersByRoleAsync(role);
         }
 

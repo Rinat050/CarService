@@ -23,7 +23,7 @@
             @if (_models is not null)
             {
                  <MudItem>
-                    <MudSelect T="Model" AdornmentIcon="@Icons.Filled.Search"  ValueChanged="@(ChangeSparePartsList)" Class="m-0 p-0" ToStringFunc="@_converter" Label="Модель" AnchorOrigin="Origin.BottomCenter" Clearable>
+                    <MudSelect T="Model" AdornmentIcon="@Icons.Filled.Search" Value="_searchModel" ValueChanged="@(ChangeSparePartsList)" Class="m-0 p-0" ToStringFunc="@_converter" Label="Модель" AnchorOrigin="Origin.BottomCenter" Clearable>
                         @foreach (Model model in _models)
                         {   
                             <MudSelectItem Value="model"/>   
@@ -67,49 +67,55 @@
 @code {
     private List<SparePart>? _spareParts;
     private List<Model> _models;
+    private Model _searchModel = null!;
 
     readonly Func<Model, string?> _converter = p => p?.Brand?.Name + " " + p?.Name;
 
 
     protected async override Task OnInitializedAsync()
     {
+        var result = await ModelService.GetAllModelsAsync();
+
+        _models = result.Data;
+
+        await FillList();
+    }
+
+    private async Task FillList()
+    {
         var allSpareParts = await SparePartService.GetAllSparePartsAsync();
 
         _spareParts = allSpareParts.Data;
 
-        var result = await ModelService.GetAllModelsAsync();
-
-        _models = result.Data;
+        _searchModel = null!;
     }
 
-    private async void OpenCreateSparePartlDialog()
+    private async Task OpenCreateSparePartlDialog()
     {
         var parameters = new DialogParameters();
 
         parameters.Add("IsNew", true);
-        var res = await DialogService.ShowAsync<EditSparePartDialog>("Добавление запчасти", parameters);
-        var dialogResult = await res.Result;
+        var dialog = await DialogService.ShowAsync<EditSparePartDialog>("Добавление запчасти", parameters);
+        var res = await dialog.Result;
 
-        if (!res.Result.IsCanceled)
+        if (!res.Canceled)
         {
-            var allSpareParts = await SparePartService.GetAllSparePartsAsync();
-
-            _spareParts = allSpareParts.Data;
-
-            StateHasChanged();
+            await FillList();
         }
     }
 
-    private async void OpenEditModelDialog(SparePart sparePart)
+    private async Task OpenEditModelDialog(SparePart sparePart)
     {
         var parameters = new DialogParameters();
 
         parameters.Add("SparePart", sparePart); 
-        var res = await DialogService.ShowAsync<EditSparePartDialog>("Изменение запчасти", parameters);
-        var dialogResult = await res.Result;
+        var dialog = await DialogService.ShowAsync<EditSparePartDialog>("Изменение запчасти", parameters);
+        var res = await dialog.Result;
 
-        if (!res.Result.IsCanceled)
-        StateHasChanged();
+        if (!res.Canceled)
+        {
+            await FillList();
+        }
     }
 
     private async void ChangeSparePartsList(Model model)
@@ -125,6 +131,7 @@
             allSpareParts = await SparePartService.GetSparePartsByModelAsync(model);
         }
 
+        _searchModel = model;
         _spareParts = allSpareParts.Data;
 
         StateHasChanged();

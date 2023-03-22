@@ -107,7 +107,7 @@ namespace CarService.Database.Repositories
 
         public async Task UpdateRepairAsync(string id, Repair repair)
         {
-            var repairDb = new RepairDb() { Id = ObjectId.Parse(repair.Id), Description = repair.Description };
+            var repairDb = new RepairDb() { Id = ObjectId.Parse(repair.Id), Description = repair.Description, Cost = repair.Cost };
 
             var filter = Builders<RepairDb>.Filter.Eq("_id", new ObjectId(id));
 

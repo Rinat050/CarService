@@ -57,38 +57,42 @@
 
     protected async override Task OnInitializedAsync()
     {
+        await FillList();
+    }
+
+    private async Task FillList()
+    {
         var allClients = await ClientService.GetAllClientsAsync();
 
         _clients = allClients.Data;
     }
 
-    private async void OpenCreateClientlDialog()
+    private async Task OpenCreateClientlDialog()
     {
         var parameters = new DialogParameters();
 
         parameters.Add("IsNew", true);
-        var res = await DialogService.ShowAsync<EditClientDialog>("Добавление клиента", parameters);
-        var dialogResult = await res.Result;
+        var dialog = await DialogService.ShowAsync<EditClientDialog>("Добавление клиента", parameters);
 
-        if (!res.Result.IsCanceled)
+        var res = await dialog.Result;
+
+        if (!res.Canceled)
         {
-            var allClients = await ClientService.GetAllClientsAsync();
-
-            _clients = allClients.Data;
-
-            StateHasChanged();
+            await FillList();
         }
     }
 
-    private async void OpenEditClientDialog(Client client)
+    private async Task OpenEditClientDialog(Client client)
     {
         var parameters = new DialogParameters();
 
         parameters.Add("Client", client); 
-        var res = await DialogService.ShowAsync<EditClientDialog>("Изменение клиента", parameters);
-        var dialogResult = await res.Result;
+        var dialog = await DialogService.ShowAsync<EditClientDialog>("Изменение клиента", parameters);
+        var res = await dialog.Result;
 
-        if (!res.Result.IsCanceled)
-        StateHasChanged();
+        if (!res.Canceled)
+        {
+            await FillList();
+        }
     }
 }

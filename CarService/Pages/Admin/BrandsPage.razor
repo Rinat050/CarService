@@ -51,27 +51,42 @@
 
     protected async override Task OnInitializedAsync()
     {
-        var allBrands = await BrandService.GetAllBrandsAsync();
+        await FillList();
+    }
 
+    private async Task FillList()
+    {
+        var allBrands = await BrandService.GetAllBrandsAsync();
         _brands = allBrands.Data;
     }
 
-    private void OpenCreateBrandDialog()
+    private async Task OpenCreateBrandDialog()
     {
         var parameters = new DialogParameters();
 
         parameters.Add("IsNew", true);
-        DialogService.Show<EditBrandDialog>("Добавление бренда", parameters);
+        var dialog = await DialogService.ShowAsync<EditBrandDialog>("Добавление бренда", parameters);
+
+        var res = await dialog.Result;
+
+        if (!res.Canceled)
+        {
+            await FillList();
+        }
     }
 
-    private void OpenEditBrandDialog(Brand brand)
+    private async Task OpenEditBrandDialog(Brand brand)
     {
         var parameters = new DialogParameters();
 
         parameters.Add("Brand", brand); 
-        var res = DialogService.Show<EditBrandDialog>("Изменение бренда", parameters);
+        var dialog = await DialogService.ShowAsync<EditBrandDialog>("Изменение бренда", parameters);
 
-        if (res.Result.IsCompleted)
-        StateHasChanged();
+        var res = await dialog.Result;
+
+        if (!res.Canceled)
+        {
+            await FillList();
+        }
     }
 }

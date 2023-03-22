@@ -10,7 +10,7 @@
     <MudDialog>
         <DialogContent>
             <MudTextField T="string" Label="Описание" @bind-Value="Repair.Description" For="@(() => Repair.Description)"></MudTextField>
-            <MudTextField T="int" Label="Стоимость" @bind-Value="Repair.Cost" For="@(() => Repair.Cost)"></MudTextField>
+            <MudTextField T="int" Label="Стоимость" ErrorText="Необходимо ввести число!" @bind-Value="Repair.Cost" For="@(() => Repair.Cost)"></MudTextField>
         </DialogContent>
         <DialogActions>
             <MudButton OnClick="@Close">ОТМЕНА</MudButton>
@@ -59,7 +59,7 @@
         if (result.Success)
         {
             Snackbar.Add(result.Description, Severity.Success);
-            Close();
+            MudDialog.Close(DialogResult.Ok(true));
         }
         else
         {

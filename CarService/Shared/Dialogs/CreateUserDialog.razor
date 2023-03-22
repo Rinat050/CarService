@@ -51,7 +51,7 @@
         if (result.Success)
         {
             Snackbar.Add(result.Description, Severity.Success);
-            Close();
+            MudDialog.Close(DialogResult.Ok(true));
         }
         else
         {

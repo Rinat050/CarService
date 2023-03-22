@@ -53,27 +53,42 @@
 
     protected async override Task OnInitializedAsync()
     {
-        var allModels = await ModelService.GetAllModelsAsync();
+        await FillList();
+    }
 
+    private async Task FillList()
+    {
+        var allModels = await ModelService.GetAllModelsAsync();
         _models = allModels.Data;
     }
 
-    private void OpenCreateModelDialog()
+    private async Task OpenCreateModelDialog()
     {
         var parameters = new DialogParameters();
 
         parameters.Add("IsNew", true);
-        DialogService.Show<EditModelDialog>("Добавление модели", parameters);
+        var dialog = await DialogService.ShowAsync<EditModelDialog>("Добавление модели", parameters);
+
+        var res = await dialog.Result;
+
+        if (!res.Canceled)
+        {
+            await FillList();
+        }
     }
 
-    private void OpenEditModelDialog(Model model)
+    private async Task OpenEditModelDialog(Model model)
     {
         var parameters = new DialogParameters();
 
         parameters.Add("Model", model); 
-        var res = DialogService.Show<EditModelDialog>("Изменение модели", parameters);
+        var dialog = DialogService.Show<EditModelDialog>("Изменение модели", parameters);
 
-        if (res.Result.IsCompleted)
-        StateHasChanged();
+        var res = await dialog.Result;
+
+        if (!res.Canceled)
+        {
+            await FillList();
+        }
     }
 }
