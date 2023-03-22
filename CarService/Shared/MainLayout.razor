@@ -1,8 +1,10 @@
-﻿@using CarService.Domain.Services.Interfaces
+﻿@using CarService.Domain.Models
+@using CarService.Domain.Services.Interfaces
 @inherits LayoutComponentBase
 
 @inject IUserService UserService
 @inject NavigationManager NavigationManager
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
 
 <MudThemeProvider Theme="mainTheme"/>
 <MudDialogProvider
@@ -74,6 +76,23 @@
     bool drawerOpen = true;
     Breakpoint breakpoint = Breakpoint.Sm;
     DrawerClipMode clipMode = DrawerClipMode.Always;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authUser = await LocalStorage.GetItemAsync<User>("AuthUser");
+
+        if (authUser is not null)
+        {
+            var res = await UserService.GetUserByLoginAsync(authUser.Login);
+            if (!res.Success)
+            {
+                return;
+            }
+
+            UserService.CurrentUser = res.Data!;
+            NavigationManager.NavigateTo("/cabinet");
+        }
+    }
 
     void DrawerToggle()  
     {  

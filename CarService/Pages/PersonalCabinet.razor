@@ -7,6 +7,7 @@
 @inject IUserService UserService
 @inject CarService.Domain.Services.Interfaces.IAuthorizationService AuthService
 @inject ISnackbar Snackbar
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
 @inject IDialogService DialogService
 @inject NavigationManager NavManager
 
@@ -103,6 +104,7 @@
         }
         else
         {
+            await LocalStorage.ClearAsync();
             NavManager.NavigateTo("/");
         }
     }

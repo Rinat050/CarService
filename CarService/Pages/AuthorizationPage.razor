@@ -1,6 +1,10 @@
 ﻿@page "/"
 @using CarService.Data
+@using CarService.Domain.Models
+@using CarService.Domain.Services.Interfaces
 @inject ISnackbar Snackbar
+@inject IUserService UserService
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
 @inject CarService.Domain.Services.Interfaces.IAuthorizationService AuthService
 @inject NavigationManager NavManager
 
@@ -41,6 +45,7 @@
 
         if (result.Success)
         {
+            await LocalStorage.SetItemAsync<User>("AuthUser", UserService.CurrentUser);
             Snackbar.Add(result.Description, Severity.Success);
             NavManager.NavigateTo("/cabinet");
         }

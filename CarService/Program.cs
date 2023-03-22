@@ -1,3 +1,4 @@
+using Blazored.LocalStorage;
 using CarService.Database;
 using CarService.Domain;
 using MudBlazor.Services;
@@ -10,6 +11,7 @@ builder.Services.AddServerSideBlazor();
 builder.Services.AddMudServices();
 builder.Services.AddDatabase();
 builder.Services.AddDomain();
+builder.Services.AddBlazoredLocalStorage();
 
 var app = builder.Build();
 
