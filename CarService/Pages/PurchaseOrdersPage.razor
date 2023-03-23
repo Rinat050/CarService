@@ -20,7 +20,7 @@
             <MudItem><MudText Typo="Typo.h6" Class="fw-bold" Color="Color.Primary">ЗАКАЗЫ-НАРЯДЫ</MudText></MudItem>
             <MudSpacer/>
             <MudItem>
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@OpenCreateSparePartlDialog">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@OpenCreateOrderlDialog">
                     <MudText Typo="Typo.button" Class="fw-bold">НОВЫЙ ЗАКАЗ</MudText>
                 </MudButton>
             </MudItem>
@@ -39,7 +39,7 @@
                 <MudTd DataLabel="Автомобиль">@(context.Car)</MudTd>
                 <MudTd DataLabel="Итоговая стоимость">@context.TotalCost руб.</MudTd>
                 <MudTd DataLabel="Статус">@context.Status.GetDisplayName()</MudTd>
-                <MudTd DataLabel="Изменение"><MudIconButton Icon="@Icons.Filled.Edit" Size="Size.Medium" OnClick="@(() => OpenEditModelDialog(sparePart))"></MudIconButton></MudTd>
+                <MudTd DataLabel="Изменение"><MudIconButton Icon="@Icons.Filled.Edit" Size="Size.Medium" OnClick="@(() => OpenEditOrderDialog(context.PurchaseOrderId))"></MudIconButton></MudTd>
             </RowTemplate>
     </MudTable>
     }
@@ -62,7 +62,7 @@
         _orders = new();
     }
 
-    private async Task OpenCreateSparePartlDialog()
+    private async Task OpenCreateOrderlDialog()
     {
         var dialog = await DialogService.ShowAsync<CreatePurchaseOrderDialog>("Новый заказ-наряд");
         var res = await dialog.Result;
