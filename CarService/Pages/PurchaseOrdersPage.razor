@@ -1,0 +1,80 @@
+﻿@page "/purchaseOrders"
+@using CarService.Domain.Enums
+@using CarService.Domain.Models
+@using CarService.Domain.Response
+@using CarService.Domain.Services.Interfaces
+@using CarService.Extensions
+@using CarService.Shared.Dialogs
+
+@inject IUserService UserService
+@inject IDialogService DialogService
+
+<MudPaper Class="m-2 p-3" Elevation="3">
+    @if (UserService.CurrentUser is null)
+    {
+        <MudAlert Variant="Variant.Outlined" ContentAlignment="HorizontalAlignment.Center" Severity="Severity.Warning">Необходимо авторизоваться!</MudAlert>
+    }
+    else if(UserService.CurrentUser.Role is Domain.Enums.Roles.Admin || UserService.CurrentUser.Role is Domain.Enums.Roles.Manager
+    || UserService.CurrentUser.Role is Domain.Enums.Roles.Diagnostician || UserService.CurrentUser.Role is Domain.Enums.Roles.Mechanic){
+        <MudGrid>
+            <MudItem><MudText Typo="Typo.h6" Class="fw-bold" Color="Color.Primary">ЗАКАЗЫ-НАРЯДЫ</MudText></MudItem>
+            <MudSpacer/>
+            <MudItem>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@OpenCreateSparePartlDialog">
+                    <MudText Typo="Typo.button" Class="fw-bold">НОВЫЙ ЗАКАЗ</MudText>
+                </MudButton>
+            </MudItem>
+        </MudGrid>  
+
+        <MudTable Class="mt-5" Items="@_orders" Hover="true" Breakpoint="Breakpoint.Sm">
+            <HeaderContent>
+                <MudTh>Клиент</MudTh>
+                <MudTh>Автомобиль</MudTh>
+                <MudTh>Итоговая стоимость</MudTh>
+                <MudTh>Статус</MudTh>
+                <MudTh>Изменение</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Клиент">@context.Client</MudTd>
+                <MudTd DataLabel="Автомобиль">@(context.Car)</MudTd>
+                <MudTd DataLabel="Итоговая стоимость">@context.TotalCost руб.</MudTd>
+                <MudTd DataLabel="Статус">@context.Status.GetDisplayName()</MudTd>
+                <MudTd DataLabel="Изменение"><MudIconButton Icon="@Icons.Filled.Edit" Size="Size.Medium" OnClick="@(() => OpenEditModelDialog(sparePart))"></MudIconButton></MudTd>
+            </RowTemplate>
+    </MudTable>
+    }
+    else
+    {
+        <MudAlert Variant="Variant.Outlined" ContentAlignment="HorizontalAlignment.Center" Severity="Severity.Warning">Недостаточно прав!</MudAlert>
+    }
+</MudPaper>
+
+@code {
+    private List<PurchaseOrderTableItem>? _orders;
+
+    protected async override Task OnInitializedAsync()
+    {
+        await FillList();
+    }
+
+    private async Task FillList()
+    {
+        _orders = new();
+    }
+
+    private async Task OpenCreateSparePartlDialog()
+    {
+        var dialog = await DialogService.ShowAsync<CreatePurchaseOrderDialog>("Новый заказ-наряд");
+        var res = await dialog.Result;
+
+        if (!res.Canceled)
+        {
+            await FillList();
+        }
+    }
+
+    private async Task OpenEditOrderDialog(string orderId)
+    {
+        // страница для редактирования
+    }
+}

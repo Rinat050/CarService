@@ -1,0 +1,107 @@
+﻿@using CarService.Data
+@using CarService.Domain.Models
+@using CarService.Domain.Response
+@using CarService.Domain.Services.Interfaces
+
+@inject ICarService CarService
+@inject IClientService ClientService
+@inject IUserService UserService
+@inject ISnackbar Snackbar
+
+<EditForm Model="Order">
+    <DataAnnotationsValidator/>
+    <MudDialog>
+        <DialogContent>
+            @if (_clients is not null)
+            {
+                <MudSelect T="Client" For="@(() => Order.Client)" ValueChanged="@(ClientSelect)" ToStringFunc="@_clientConverter" Label="Клиент" AnchorOrigin="Origin.BottomCenter">
+                    @foreach (Client client in _clients)
+                    {
+                        <MudSelectItem Value="client"></MudSelectItem>
+                    }
+                </MudSelect>
+                <MudSelect @bind-Value="Order.Car" For="@(() => Order.Car)" ToStringFunc="@_carConverter" Label="Автомобиль" AnchorOrigin="Origin.BottomCenter">
+                    @foreach (Car car in _clientCars)
+                    {
+                        <MudSelectItem Value="car"></MudSelectItem>
+                    }
+                </MudSelect>
+                <MudSelect @bind-Value="Order.Diagnostician" For="@(() => Order.Diagnostician)" ToStringFunc="@_userConverter" Label="Диагност" AnchorOrigin="Origin.BottomCenter">
+                    @foreach (User user in _diagnosticians)
+                    {
+                        <MudSelectItem Value="user"></MudSelectItem>
+                    }
+                </MudSelect>
+                <MudSelect @bind-Value="Order.Mechanic" For="@(() => Order.Mechanic)" ToStringFunc="@_userConverter" Label="Механик" AnchorOrigin="Origin.BottomCenter">
+                    @foreach (User user in _mechanics)
+                    {
+                        <MudSelectItem Value="user"></MudSelectItem>
+                    }
+                </MudSelect>
+            }
+        </DialogContent>
+        <DialogActions>
+            <MudButton OnClick="@Close">ОТМЕНА</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" ButtonType="ButtonType.Submit">СОХРАНИТЬ</MudButton>
+        </DialogActions>
+    </MudDialog>
+</EditForm>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter] public CreatePurchaseOrderCredentials Order { get; set; } 
+
+    private List<Client> _clients = new();
+    private List<Car> _clientCars = new();
+    private List<User> _diagnosticians = new();
+    private List<User> _mechanics = new();
+
+    readonly Func<User, string?> _userConverter = p => ($"{p?.Surname} {p?.Name} {p?.Patronymic}");
+    readonly Func<Client, string?> _clientConverter = p => ($"{p?.Surname} {p?.Name} {p?.Patronymic}");
+    readonly Func<Car, string?> _carConverter = p => ($"{p?.Model.Brand.Name} {p?.Model.Name} {p?.StateNumber}");
+
+    private void Close() => MudDialog.Close();
+
+    protected async override Task OnInitializedAsync()
+    {
+        await FillList();
+    }
+
+    private async Task FillList()
+    {
+        var resultClients = await ClientService.GetAllClientsAsync();
+
+        _clients = resultClients.Data;
+
+        var resDiagnost = await UserService.GetUsersByRoleAsync(Domain.Enums.Roles.Diagnostician);
+
+        _diagnosticians = resDiagnost.Data;
+
+        var resMechanic = await UserService.GetUsersByRoleAsync(Domain.Enums.Roles.Mechanic);
+
+        _mechanics = resMechanic.Data;
+    }
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+
+        Order = new CreatePurchaseOrderCredentials();
+    }
+
+    private async void ClientSelect(Client client)
+    {
+        Order.Client = client;
+
+        if (client is not null)
+        {
+            var res = await CarService.GetCarsByClientAsync(client);
+            _clientCars = res.Data;
+            return;
+        }
+
+        _clientCars = new();
+    }
+}
+
