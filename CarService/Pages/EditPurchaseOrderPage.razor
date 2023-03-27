@@ -1,0 +1,167 @@
+﻿@page "/purchaseOrder"
+@using CarService.Domain.Models
+@using CarService.Extensions
+
+<MudPaper Class="m-2 p-4" Elevation="3">
+    @if (_order is null)
+    {
+        <MudAlert Variant="Variant.Outlined" ContentAlignment="HorizontalAlignment.Center" Severity="Severity.Warning">Заказ-наряд не найден!</MudAlert>
+    }
+    else
+    {
+        <MudGrid>
+            <MudItem><MudText Typo="Typo.h6" Class="fw-bold" Color="Color.Primary">ЗАКАЗ-НАРЯД</MudText></MudItem>
+            <MudSpacer/>
+            <MudItem>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary">
+                    <MudText Typo="Typo.button" Class="fw-bold">СОХРАНИТЬ</MudText>
+                </MudButton>
+            </MudItem>
+        </MudGrid>  
+
+        <MudGrid Spacing="5">
+            <MudItem><MudText Class="fs-6" Color="Color.Default">Дата создания: @(_order.CreatedDate)</MudText></MudItem>
+            <MudItem><MudText Class="fs-6" Color="Color.Default">Статус: <MudText Inline Class="fw-bold fs-6" Color="Color.Success">@(_order.Status.GetDisplayName())</MudText></MudText></MudItem>
+        </MudGrid>  
+
+         <MudGrid Spacing="5" Class="d-xxl-grid align-items-center" Justify="Justify.FlexStart">
+            <MudItem><MudText Class="fs-6" Color="Color.Default">Менеджер: @($"{_order.Manager.Surname} {_order.Manager.Name}")</MudText></MudItem>
+            <MudItem xs="4">
+                <MudSelect T="User" @bind-Value="_order.Mechanic" Label="Диагност" ToStringFunc="_userConverter" AnchorOrigin="Origin.BottomCenter">
+
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="4">
+                <MudSelect T="User" @bind-Value="_order.Mechanic" Label="Механик" ToStringFunc="_userConverter" AnchorOrigin="Origin.BottomCenter">
+
+                </MudSelect>
+            </MudItem>
+        </MudGrid>  
+
+        <MudGrid Spacing="5">
+            <MudItem><MudText Class="fs-6" Color="Color.Default">Клиент: @($"{_order.Manager.Surname} {_order.Manager.Name}")</MudText></MudItem>
+            <MudItem><MudText Class="fs-6" Color="Color.Default">Телефон: @(_order.Client.PhoneNumber)</MudText></MudItem>
+        </MudGrid> 
+
+        <MudGrid Spacing="5">
+            <MudItem><MudText Class="fs-6" Color="Color.Default">Автомобиль: @($"{_order.Car.Model?.Brand.Name} {_order.Car.Model?.Name} {_order.Car.StateNumber}")</MudText></MudItem>
+            <MudItem><MudText Class="fs-6" Color="Color.Default">VIN - номер: @(_order.Car.VinNumber)</MudText></MudItem>
+            <MudItem><MudText Class="fs-6" Color="Color.Default">Итоговая стоимость: <MudText Inline Class="fw-bold fs-6" Color="Color.Success">15 700 руб.</MudText></MudText></MudItem>
+        </MudGrid> 
+
+        <MudExpansionPanels Class="mt-4" Elevation="4">
+            <MudExpansionPanel Text="Неисправности">   
+                <TitleContent>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <MudText><strong>Неисправности</strong></MudText>
+                        <MudFab  Class="me-4" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Size="Size.Small"></MudFab>
+                    </div>
+                </TitleContent>
+                <ChildContent>
+                    <MudTable Items="@_order.Defects" Hover="true" Breakpoint="Breakpoint.Sm">
+                        <HeaderContent>
+                            <MudTh><strong>Название</strong></MudTh>
+                            <MudTh><strong>Удалить</strong></MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="Название">@context.Description</MudTd>
+                            <MudTd DataLabel="Удалить"><MudIconButton Icon="@Icons.Filled.Delete" Size="Size.Medium" Color="Color.Error"></MudIconButton></MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                </ChildContent>
+            </MudExpansionPanel>
+            <MudExpansionPanel>
+                <TitleContent>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <MudText><strong>Запчасти</strong></MudText>
+                        <MudFab  Class="me-4" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Size="Size.Small"></MudFab>
+                    </div>
+                </TitleContent>
+                <ChildContent>
+                    <MudTable Items="@_order.SpareParts" Hover="true" Breakpoint="Breakpoint.Sm">
+                        <HeaderContent>
+                            <MudTh><strong>Название</strong></MudTh>
+                            <MudTh><strong>Модель</strong></MudTh>
+                            <MudTh><strong>Цена</strong></MudTh>
+                            <MudTh><strong>Количество</strong></MudTh>
+                            <MudTh><strong>Удалить</strong></MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="Название">@context.SparePart.Name</MudTd>
+                            <MudTd DataLabel="Модель">@context.SparePart.Model?.Name</MudTd>
+                            <MudTd DataLabel="Цена">@context.Price руб.</MudTd>
+                            <MudTd DataLabel="Количество">@context.Count</MudTd>
+                            <MudTd DataLabel="Удалить"><MudIconButton Icon="@Icons.Filled.Delete" Size="Size.Medium" Color="Color.Error"></MudIconButton></MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                </ChildContent>  
+            </MudExpansionPanel>
+            <MudExpansionPanel>
+                <TitleContent>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <MudText><strong>Ремонтные работы</strong></MudText>
+                        <MudFab  Class="me-4" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Size="Size.Small"></MudFab>
+                    </div>
+                </TitleContent>
+                <ChildContent>
+                    <MudTable Items="@_order.CompletedWorks" Hover="true" Breakpoint="Breakpoint.Sm">
+                        <HeaderContent>
+                            <MudTh><strong>Описание</strong></MudTh>
+                            <MudTh><strong>Цена</strong></MudTh>
+                            <MudTh><strong>Количество</strong></MudTh>
+                            <MudTh><strong>Удалить</strong></MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="Описание">@context.Repair?.Description</MudTd>
+                            <MudTd DataLabel="Цена">@context.Price руб.</MudTd>
+                            <MudTd Class="p-3" DataLabel="Количество">@context.Count</MudTd>
+                            <MudTd DataLabel="Удалить"><MudIconButton Icon="@Icons.Filled.Delete" Size="Size.Medium" Color="Color.Error"></MudIconButton></MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                </ChildContent>
+            </MudExpansionPanel>
+        </MudExpansionPanels>
+    }
+
+</MudPaper>
+
+@code {
+    [Parameter] public string PurchaseOrderId { get; set; }
+    private PurchaseOrder _order = null;
+
+    readonly Func<User, string?> _userConverter = p => ($"{p?.Surname} {p?.Name} {p?.Patronymic}");
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+
+        _order = new PurchaseOrder()
+        {
+            CreatedDate = DateTime.Now,
+            Status = Domain.Enums.OrderStatus.Diagnosed,
+            Client = new Client() {Surname = "Иванов", Name = "Иван", PhoneNumber="+7 (980) 89 190-67"},
+            Car = new Car() {StateNumber = "Т 777 ТТ 116", VinNumber="H6S8CIV9D76SG5CJH"},
+            Manager = new User() {Surname = "Иванов", Name = "Иван"},
+            Diagnostician = new User() {Surname = "Иванов", Name = "Иван"},
+            Mechanic = new User() {Surname = "Иванов", Name = "Иван"},
+            Defects = new () 
+            {
+                new Defect() {Description = "Неисправность двигателя"},
+                new Defect() {Description = "Неисправность двигателя"},
+                new Defect() {Description = "Неисправность двигателя"}
+            },
+            SpareParts = new ()
+            {
+                new SparePartListItem() { SparePart = new SparePart() { Name = "Двигатель Двигатель Двигатель Двигатель Двигатель" }, Price = 12000},
+                new SparePartListItem() { SparePart = new SparePart() { Name = "Двигатель" }, Price = 12000},
+                new SparePartListItem() { SparePart = new SparePart() { Name = "Двигатель" }, Price = 12000},
+            },
+            CompletedWorks = new ()
+            {
+                new RepairListItem() {Repair = new Repair() {Description = "Замена двигателя"}, Price = 3000, Count = 1},
+                new RepairListItem() {Repair = new Repair() {Description = "Замена двигателя"}, Price = 3000, Count = 1},
+                new RepairListItem() {Repair = new Repair() {Description = "Замена двигателя"}, Price = 3000, Count = 1},
+            }
+        };
+    }
+}

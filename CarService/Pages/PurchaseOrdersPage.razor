@@ -41,7 +41,7 @@
                 <MudTd DataLabel="Статус">@context.Status.GetDisplayName()</MudTd>
                 <MudTd DataLabel="Изменение"><MudIconButton Icon="@Icons.Filled.Edit" Size="Size.Medium" OnClick="@(() => OpenEditOrderDialog(context.PurchaseOrderId))"></MudIconButton></MudTd>
             </RowTemplate>
-    </MudTable>
+        </MudTable>
     }
     else
     {
