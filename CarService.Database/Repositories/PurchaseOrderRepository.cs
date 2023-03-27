@@ -52,7 +52,7 @@ namespace CarService.Database.Repositories
                     Car = _carRepository.GetCarById(x.CarId).Model.Brand.Name + " "
                         + _carRepository.GetCarById(x.CarId).Model.Name + " "
                         + _carRepository.GetCarById(x.CarId).StateNumber,
-                    TotalCost = GetTotalCost(x.CompletedWorks, x.SpareParts),
+                    TotalCost =  GetTotalCost(x.CompletedWorks, x.SpareParts),
                     Status = (OrderStatus) x.Status,
                 }).ToList<PurchaseOrderTableItem>();
         }
@@ -166,12 +166,18 @@ namespace CarService.Database.Repositories
             };
         }
 
-        private int GetTotalCost(List<RepairListItemDb> repairs, List<SparePartListItemDb> spareParts)
+        private int GetTotalCost(List<RepairListItemDb>? repairs, List<SparePartListItemDb>? spareParts)
         {
-            var repairRes = repairs.Sum(x => x.Count * x.Price);
-            var sparePartRes = repairs.Sum(x => x.Count * x.Price);
+            int repairRes = 0;
+            int sparePartsRes = 0;
 
-            return repairRes + sparePartRes;
+            if (repairs is not null)
+                repairRes = repairs.Sum(x => x.Count * x.Price);
+            
+            if (spareParts is not null)
+                sparePartsRes = repairs.Sum(x => x.Count * x.Price);
+
+            return repairRes + sparePartsRes;
         }
     }
 }

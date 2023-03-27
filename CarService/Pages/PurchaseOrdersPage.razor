@@ -7,6 +7,7 @@
 @using CarService.Shared.Dialogs
 
 @inject IUserService UserService
+@inject IPurchaseOrderService OrderService
 @inject IDialogService DialogService
 
 <MudPaper Class="m-2 p-3" Elevation="3">
@@ -50,7 +51,7 @@
 </MudPaper>
 
 @code {
-    private List<PurchaseOrderTableItem>? _orders;
+    private List<PurchaseOrderTableItem> _orders;
 
     protected async override Task OnInitializedAsync()
     {
@@ -59,7 +60,9 @@
 
     private async Task FillList()
     {
-        _orders = new();
+        var res = await OrderService.GetAllPurchaseOrdersAsync();
+
+        _orders = res.Data;
     }
 
     private async Task OpenCreateOrderlDialog()

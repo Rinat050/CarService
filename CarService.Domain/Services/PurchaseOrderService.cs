@@ -9,11 +9,14 @@ namespace CarService.Domain.Services
     {
         private IPurchaseOrderRepository _orderRepository;
         private ISparePartService _sparePartService;
+        private IUserService _userService;
 
-        public PurchaseOrderService(IPurchaseOrderRepository orderRepository, ISparePartService sparePartService)
+        public PurchaseOrderService(IPurchaseOrderRepository orderRepository, 
+            ISparePartService sparePartService, IUserService userService)
         {
             _orderRepository = orderRepository;
             _sparePartService = sparePartService;
+            _userService = userService;
         }
 
         public async Task<BaseResponse<PurchaseOrder>> CreatePurchaseOrderAsync(Client client, Car car,
@@ -26,7 +29,10 @@ namespace CarService.Domain.Services
                     Car = car,
                     Client = client,
                     Diagnostician = diagnostician,
-                    Mechanic = mechanic
+                    Mechanic = mechanic,
+                    Manager = _userService.CurrentUser,
+                    CreatedDate = DateTime.Now,
+                    Status = Enums.OrderStatus.Created
                 });
 
                 return new BaseResponse<PurchaseOrder>()
@@ -65,7 +71,7 @@ namespace CarService.Domain.Services
                     Success = false,
                     Description = "Внутренняя ошибка!"
                 };
-            });
+            };
         }
 
         public async Task<BaseResponse<PurchaseOrder>> UpdatePurchaseOrderAsync(PurchaseOrder order)

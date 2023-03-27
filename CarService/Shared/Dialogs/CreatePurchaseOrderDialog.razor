@@ -6,9 +6,10 @@
 @inject ICarService CarService
 @inject IClientService ClientService
 @inject IUserService UserService
+@inject IPurchaseOrderService OrderService
 @inject ISnackbar Snackbar
 
-<EditForm Model="Order">
+<EditForm Model="Order" OnValidSubmit="() => CreateOrder()">
     <DataAnnotationsValidator/>
     <MudDialog>
         <DialogContent>
@@ -88,6 +89,21 @@
         base.OnInitialized();
 
         Order = new CreatePurchaseOrderCredentials();
+    }
+
+    private async void CreateOrder()
+    {
+        var res = await OrderService.CreatePurchaseOrderAsync(Order.Client, Order.Car,
+                                                    Order.Diagnostician, Order.Mechanic);
+        if (res.Success)
+        {
+            Snackbar.Add(res.Description, Severity.Success);
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+        else
+        {
+            Snackbar.Add(res.Description, Severity.Error);
+        }
     }
 
     private async void ClientSelect(Client client)
