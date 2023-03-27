@@ -36,14 +36,25 @@ namespace CarService.Database.Repositories
             await _purchaseOrders.InsertOneAsync(purchaseOrderdb);
         }
 
-        public async Task<List<PurchaseOrder>> GetAllPurchaseOrdersAsync()
+        public async Task<List<PurchaseOrderTableItem>> GetAllPurchaseOrdersAsync()
         {
             var purchaseOrders = await _purchaseOrders
                 .FindAsync<PurchaseOrderDb>(x => true);
 
             return purchaseOrders
                 .ToEnumerable()
-                .Select(x => GetPurchaseOrder(x)).ToList<PurchaseOrder>();
+                .Select(x => new PurchaseOrderTableItem()
+                {
+                    PurchaseOrderId = x.Id.ToString(),
+                    Client = $"{_clientRepository.GetClientById(x.ClientId).Surname} " +
+                    $"{_clientRepository.GetClientById(x.ClientId).Name}",
+                    CreatedDate = x.CreatedDate,
+                    Car = _carRepository.GetCarById(x.CarId).Model.Brand.Name + " "
+                        + _carRepository.GetCarById(x.CarId).Model.Name + " "
+                        + _carRepository.GetCarById(x.CarId).StateNumber,
+                    TotalCost = GetTotalCost(x.CompletedWorks, x.SpareParts),
+                    Status = (OrderStatus) x.Status,
+                }).ToList<PurchaseOrderTableItem>();
         }
 
         public PurchaseOrder GetPurchaseOrderById(string id)
@@ -153,6 +164,14 @@ namespace CarService.Database.Repositories
                                     Price = x.Price
                                 }).ToList(),
             };
+        }
+
+        private int GetTotalCost(List<RepairListItemDb> repairs, List<SparePartListItemDb> spareParts)
+        {
+            var repairRes = repairs.Sum(x => x.Count * x.Price);
+            var sparePartRes = repairs.Sum(x => x.Count * x.Price);
+
+            return repairRes + sparePartRes;
         }
     }
 }

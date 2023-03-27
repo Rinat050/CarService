@@ -9,6 +9,7 @@ namespace CarService.Database.Models
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
         public ObjectId Id { get; set; }
+        [BsonDateTimeOptions(Kind = DateTimeKind.Local)]
         public DateTime CreatedDate { get; set; }
         public int Status { get; set; }
         public string ClientId { get; set; }

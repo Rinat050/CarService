@@ -156,5 +156,13 @@ namespace CarService.Database.Repositories
 
             await _spareParts.ReplaceOneAsync(filter, sparePartDb);
         }
+
+        public async Task UpdateSparePartCountAsync(string id, int count)
+        {
+            var sparePart = GetSparePartById(id);
+            sparePart.Count = count;
+
+            await UpdateSparePartAsync(id, sparePart);
+        }
     }
 }

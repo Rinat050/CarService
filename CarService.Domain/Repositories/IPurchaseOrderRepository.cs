@@ -6,7 +6,7 @@ namespace CarService.Domain.Repositories
     {
         public Task AddPurchaseOrderAsync(PurchaseOrder purchaseOrder);
 
-        public Task<List<PurchaseOrder>> GetAllPurchaseOrdersAsync();
+        public Task<List<PurchaseOrderTableItem>> GetAllPurchaseOrdersAsync();
 
         public Task<PurchaseOrder> GetPurchaseOrderByIdAsync(string id);
 

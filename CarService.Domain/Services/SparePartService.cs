@@ -133,5 +133,47 @@ namespace CarService.Domain.Services
                 };
             }
         }
+
+        public async Task<BaseResponse<SparePart>> ChangeSparePartCountAsync(string sparePartId, int count)
+        {
+            try
+            {
+                var sparePartDb = await _sparePartRepository.GetSparePartByIdAsync(sparePartId);
+
+                if (sparePartDb is null)
+                {
+                    return new BaseResponse<SparePart>()
+                    {
+                        Success = false,
+                        Description = "Запчасть не найдена!"
+                    };
+                }
+
+                if (sparePartDb.Count + count < 0)
+                {
+                    return new BaseResponse<SparePart>()
+                    {
+                        Success = false,
+                        Description = "Недостаточно запчасти на складе!"
+                    };
+                }
+
+                await _sparePartRepository.UpdateSparePartCountAsync(sparePartId, sparePartDb.Count + count);
+
+                return new BaseResponse<SparePart>()
+                {
+                    Success = true,
+                    Description = "Данные успешно обновлены!"
+                };
+            }
+            catch
+            {
+                return new BaseResponse<SparePart>()
+                {
+                    Success = false,
+                    Description = "Внутренняя ошибка!"
+                };
+            }
+        }
     }
 }

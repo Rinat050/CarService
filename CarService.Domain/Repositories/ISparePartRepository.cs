@@ -17,5 +17,7 @@ namespace CarService.Domain.Repositories
         public SparePart GetSparePartById(string id);
 
         public Task UpdateSparePartAsync(string id, SparePart sparePart);
+
+        public Task UpdateSparePartCountAsync(string id, int count);
     }
 }
