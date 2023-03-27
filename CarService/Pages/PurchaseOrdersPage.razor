@@ -9,6 +9,7 @@
 @inject IUserService UserService
 @inject IPurchaseOrderService OrderService
 @inject IDialogService DialogService
+@inject NavigationManager NavManager
 
 <MudPaper Class="m-2 p-3" Elevation="3">
     @if (UserService.CurrentUser is null)
@@ -78,6 +79,6 @@
 
     private async Task OpenEditOrderDialog(string orderId)
     {
-        // страница для редактирования
+        NavManager.NavigateTo($"/purchaseOrder/{orderId}");
     }
 }

@@ -74,6 +74,37 @@ namespace CarService.Domain.Services
             };
         }
 
+        public async Task<BaseResponse<PurchaseOrder>> GetPurchaseOrderByIdAsync(string id)
+        {
+            try
+            {
+                var order = await _orderRepository.GetPurchaseOrderByIdAsync(id);
+
+                if (order is null)
+                {
+                    return new BaseResponse<PurchaseOrder>()
+                    {
+                        Success = false,
+                        Description = "Заказ-наряд не найден!"
+                    };
+                }
+
+                return new BaseResponse<PurchaseOrder>()
+                {
+                    Success = true,
+                    Data = order
+                };
+            }
+            catch
+            {
+                return new BaseResponse<PurchaseOrder>()
+                {
+                    Success = false,
+                    Description = "Внутренняя ошибка!"
+                };
+            };
+        }
+
         public async Task<BaseResponse<PurchaseOrder>> UpdatePurchaseOrderAsync(PurchaseOrder order)
         {
             try

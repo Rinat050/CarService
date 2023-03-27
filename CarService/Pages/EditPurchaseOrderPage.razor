@@ -1,9 +1,18 @@
-﻿@page "/purchaseOrder"
+﻿@page "/purchaseOrder/{PurchaseOrderId}"
+@using CarService.Domain.Enums
 @using CarService.Domain.Models
+@using CarService.Domain.Services.Interfaces
 @using CarService.Extensions
 
+@inject IPurchaseOrderService OrderService
+@inject ISnackbar Snackbar
+
 <MudPaper Class="m-2 p-4" Elevation="3">
-    @if (_order is null)
+    @if (_loading)
+    {
+        <MudProgressCircular Color="Color.Primary" Size="Size.Medium" Indeterminate="true"></MudProgressCircular>
+    }
+    else if (_order is null)
     {
         <MudAlert Variant="Variant.Outlined" ContentAlignment="HorizontalAlignment.Center" Severity="Severity.Warning">Заказ-наряд не найден!</MudAlert>
     }
@@ -19,34 +28,55 @@
             </MudItem>
         </MudGrid>  
 
-        <MudGrid Spacing="5">
+        <MudGrid Spacing="5" Class="align-items-center" Justify="Justify.FlexStart">
             <MudItem><MudText Class="fs-6" Color="Color.Default">Дата создания: @(_order.CreatedDate)</MudText></MudItem>
-            <MudItem><MudText Class="fs-6" Color="Color.Default">Статус: <MudText Inline Class="fw-bold fs-6" Color="Color.Success">@(_order.Status.GetDisplayName())</MudText></MudText></MudItem>
-        </MudGrid>  
-
-         <MudGrid Spacing="5" Class="d-xxl-grid align-items-center" Justify="Justify.FlexStart">
-            <MudItem><MudText Class="fs-6" Color="Color.Default">Менеджер: @($"{_order.Manager.Surname} {_order.Manager.Name}")</MudText></MudItem>
-            <MudItem xs="4">
-                <MudSelect T="User" @bind-Value="_order.Mechanic" Label="Диагност" ToStringFunc="_userConverter" AnchorOrigin="Origin.BottomCenter">
-
+            <MudItem>
+                <MudSelect @bind-Value="_order.Status" Label="Статус" ToStringFunc="_statusConverter" AnchorOrigin="Origin.BottomCenter">
+                    @foreach(OrderStatus status in Enum.GetValues(typeof(OrderStatus)))
+                    {
+                        <MudSelectItem Value="status"></MudSelectItem>
+                    }
                 </MudSelect>
             </MudItem>
-            <MudItem xs="4">
-                <MudSelect T="User" @bind-Value="_order.Mechanic" Label="Механик" ToStringFunc="_userConverter" AnchorOrigin="Origin.BottomCenter">
+        </MudGrid>  
 
-                </MudSelect>
+         <MudGrid Spacing="5" Class="align-items-center" Justify="Justify.FlexStart">
+            <MudItem><MudText Class="fs-6" Color="Color.Default">Менеджер: @($"{_order.Manager.Surname} {_order.Manager.Name} {_order.Manager.Patronymic}")</MudText></MudItem>
+            <MudItem xs="4">
+                @if (_order.Status == OrderStatus.Created)
+                {
+                    <MudSelect T="User" @bind-Value="_order.Diagnostician" Label="Диагност" ToStringFunc="_userConverter" AnchorOrigin="Origin.BottomCenter">
+
+                    </MudSelect>                 
+                }
+                else
+                {
+                     <MudText Class="fs-6" Color="Color.Default">Диагност: @($"{_order.Diagnostician.Surname} {_order.Diagnostician.Name} {_order.Diagnostician.Patronymic}")</MudText>
+                }
+            </MudItem>
+            <MudItem xs="4">
+                @if (_order.Status == OrderStatus.Created || _order.Status == OrderStatus.Diagnosed || _order.Status == OrderStatus.InWork)
+                {
+                    <MudSelect T="User" @bind-Value="_order.Mechanic" Label="Механик" ToStringFunc="_userConverter" AnchorOrigin="Origin.BottomCenter">
+
+                    </MudSelect>            
+                }
+                else
+                {
+                     <MudText Class="fs-6" Color="Color.Default">Механик: @($"{_order.Mechanic.Surname} {_order.Mechanic.Name} {_order.Mechanic.Patronymic}")</MudText>
+                }
             </MudItem>
         </MudGrid>  
 
         <MudGrid Spacing="5">
-            <MudItem><MudText Class="fs-6" Color="Color.Default">Клиент: @($"{_order.Manager.Surname} {_order.Manager.Name}")</MudText></MudItem>
+            <MudItem><MudText Class="fs-6" Color="Color.Default">Клиент: @($"{_order.Client.Surname} {_order.Client.Name} {_order.Client.Patronymic}")</MudText></MudItem>
             <MudItem><MudText Class="fs-6" Color="Color.Default">Телефон: @(_order.Client.PhoneNumber)</MudText></MudItem>
         </MudGrid> 
 
         <MudGrid Spacing="5">
             <MudItem><MudText Class="fs-6" Color="Color.Default">Автомобиль: @($"{_order.Car.Model?.Brand.Name} {_order.Car.Model?.Name} {_order.Car.StateNumber}")</MudText></MudItem>
             <MudItem><MudText Class="fs-6" Color="Color.Default">VIN - номер: @(_order.Car.VinNumber)</MudText></MudItem>
-            <MudItem><MudText Class="fs-6" Color="Color.Default">Итоговая стоимость: <MudText Inline Class="fw-bold fs-6" Color="Color.Success">15 700 руб.</MudText></MudText></MudItem>
+            <MudItem><MudText Class="fs-6" Color="Color.Default">Итоговая стоимость: <MudText Inline Class="fw-bold fs-6" Color="Color.Success">1000 руб.</MudText></MudText></MudItem>
         </MudGrid> 
 
         <MudExpansionPanels Class="mt-4" Elevation="4">
@@ -128,40 +158,32 @@
 @code {
     [Parameter] public string PurchaseOrderId { get; set; }
     private PurchaseOrder _order = null;
+    private bool _loading = true;
 
     readonly Func<User, string?> _userConverter = p => ($"{p?.Surname} {p?.Name} {p?.Patronymic}");
+    readonly Func<OrderStatus, string?> _statusConverter = p => p.GetDisplayName();
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        base.OnInitialized();
-
-        _order = new PurchaseOrder()
+        if (PurchaseOrderId is not null)
         {
-            CreatedDate = DateTime.Now,
-            Status = Domain.Enums.OrderStatus.Diagnosed,
-            Client = new Client() {Surname = "Иванов", Name = "Иван", PhoneNumber="+7 (980) 89 190-67"},
-            Car = new Car() {StateNumber = "Т 777 ТТ 116", VinNumber="H6S8CIV9D76SG5CJH"},
-            Manager = new User() {Surname = "Иванов", Name = "Иван"},
-            Diagnostician = new User() {Surname = "Иванов", Name = "Иван"},
-            Mechanic = new User() {Surname = "Иванов", Name = "Иван"},
-            Defects = new () 
+            var res = await OrderService.GetPurchaseOrderByIdAsync(PurchaseOrderId);
+
+            if(res.Success)
             {
-                new Defect() {Description = "Неисправность двигателя"},
-                new Defect() {Description = "Неисправность двигателя"},
-                new Defect() {Description = "Неисправность двигателя"}
-            },
-            SpareParts = new ()
-            {
-                new SparePartListItem() { SparePart = new SparePart() { Name = "Двигатель Двигатель Двигатель Двигатель Двигатель" }, Price = 12000},
-                new SparePartListItem() { SparePart = new SparePart() { Name = "Двигатель" }, Price = 12000},
-                new SparePartListItem() { SparePart = new SparePart() { Name = "Двигатель" }, Price = 12000},
-            },
-            CompletedWorks = new ()
-            {
-                new RepairListItem() {Repair = new Repair() {Description = "Замена двигателя"}, Price = 3000, Count = 1},
-                new RepairListItem() {Repair = new Repair() {Description = "Замена двигателя"}, Price = 3000, Count = 1},
-                new RepairListItem() {Repair = new Repair() {Description = "Замена двигателя"}, Price = 3000, Count = 1},
+                _order = res.Data;
+
+                if (_order.CompletedWorks == null)
+                    _order.CompletedWorks = new();
+
+                if (_order.Defects == null)
+                    _order.Defects = new();
+
+                if (_order.SpareParts == null)
+                    _order.SpareParts = new();
             }
-        };
+
+            _loading = false;
+        }
     }
 }

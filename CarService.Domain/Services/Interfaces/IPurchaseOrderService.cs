@@ -11,5 +11,7 @@ namespace CarService.Domain.Services.Interfaces
         public Task<BaseResponse<PurchaseOrder>> UpdatePurchaseOrderAsync(PurchaseOrder order);
 
         public Task<BaseResponse<List<PurchaseOrderTableItem>>> GetAllPurchaseOrdersAsync();
+
+        public Task<BaseResponse<PurchaseOrder>> GetPurchaseOrderByIdAsync(string id);
     }
 }
