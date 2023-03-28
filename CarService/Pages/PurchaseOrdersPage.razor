@@ -30,6 +30,7 @@
 
         <MudTable Class="mt-5" Items="@_orders" Hover="true" Breakpoint="Breakpoint.Sm">
             <HeaderContent>
+                <MudTh>Дата создания</MudTh>
                 <MudTh>Клиент</MudTh>
                 <MudTh>Автомобиль</MudTh>
                 <MudTh>Итоговая стоимость</MudTh>
@@ -37,6 +38,7 @@
                 <MudTh>Изменение</MudTh>
             </HeaderContent>
             <RowTemplate>
+                <MudTd DataLabel="Дата создания">@(context.CreatedDate.ToString("D"))</MudTd>
                 <MudTd DataLabel="Клиент">@context.Client</MudTd>
                 <MudTd DataLabel="Автомобиль">@(context.Car)</MudTd>
                 <MudTd DataLabel="Итоговая стоимость">@context.TotalCost руб.</MudTd>

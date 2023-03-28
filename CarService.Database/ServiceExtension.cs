@@ -11,7 +11,7 @@ namespace CarService.Database
             var mongoConnection = new MongoConnection("mongodb://localhost", "CarService");
 
             services.AddSingleton(_ => mongoConnection);
-            services.AddSingleton<IUserRepository, UserRepository>();
+            services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IBrandRepository, BrandRepository>();
             services.AddScoped<IModelRepository, ModelRepository>();
             services.AddScoped<IDefectRepository, DefectRepository>();

@@ -18,6 +18,8 @@ namespace CarService.Domain.Services.Interfaces
 
         public Task<BaseResponse<List<User>>> GetAllUsersAsync();
 
+        public Task<BaseResponse<List<User>>> GetAvailableUsersByRoleAsync(Roles role);
+
         public Task<BaseResponse<List<User>>> GetUsersByRoleAsync(Roles role);
     }
 }

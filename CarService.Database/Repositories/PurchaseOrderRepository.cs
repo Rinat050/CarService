@@ -179,5 +179,35 @@ namespace CarService.Database.Repositories
 
             return repairRes + sparePartsRes;
         }
+
+        public bool IsPurchaseOrderExistByStatusAndDiagnostician(OrderStatus status, string diagnosticianId)
+        {
+            var purchaseOrders = _purchaseOrders
+                .Find<PurchaseOrderDb>(x => x.Status == (int)status && x.DiagnosticianId == diagnosticianId);
+
+            var purchaseOrderInfo = purchaseOrders.FirstOrDefault();
+
+            if (purchaseOrderInfo is not null)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        public bool IsPurchaseOrderExistByStatusAndMechanic(OrderStatus status, string mechanicId)
+        {
+            var purchaseOrders = _purchaseOrders
+                .Find<PurchaseOrderDb>(x => x.Status == (int)status && x.MechanicId == mechanicId);
+
+            var purchaseOrderInfo = purchaseOrders.FirstOrDefault();
+
+            if (purchaseOrderInfo is not null)
+            {
+                return true;
+            }
+
+            return false;
+        }
     }
 }

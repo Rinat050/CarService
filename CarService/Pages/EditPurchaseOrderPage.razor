@@ -5,6 +5,7 @@
 @using CarService.Extensions
 
 @inject IPurchaseOrderService OrderService
+@inject IUserService UserService
 @inject ISnackbar Snackbar
 
 <MudPaper Class="m-2 p-4" Elevation="3">
@@ -32,21 +33,34 @@
             <MudItem><MudText Class="fs-6" Color="Color.Default">Дата создания: @(_order.CreatedDate)</MudText></MudItem>
             <MudItem>
                 <MudSelect @bind-Value="_order.Status" Label="Статус" ToStringFunc="_statusConverter" AnchorOrigin="Origin.BottomCenter">
-                    @foreach(OrderStatus status in Enum.GetValues(typeof(OrderStatus)))
+                    @if(UserService.CurrentUser.Role == Roles.Manager)
                     {
-                        <MudSelectItem Value="status"></MudSelectItem>
+                        <MudSelectItem Value="OrderStatus.Completed"></MudSelectItem>
+                        <MudSelectItem Value="OrderStatus.RegectedByClient"></MudSelectItem>
                     }
-                </MudSelect>
+                    else if(UserService.CurrentUser.Role == Roles.Diagnostician)
+                    {
+                        <MudSelectItem Value="OrderStatus.Diagnosed"></MudSelectItem>
+                    }
+                    else if(UserService.CurrentUser.Role == Roles.Mechanic)
+                    {
+                        <MudSelectItem Value="OrderStatus.InWork"></MudSelectItem>
+                        <MudSelectItem Value="OrderStatus.ClosedByWork"></MudSelectItem>
+                    }
+            </MudSelect>
             </MudItem>
         </MudGrid>  
 
          <MudGrid Spacing="5" Class="align-items-center" Justify="Justify.FlexStart">
             <MudItem><MudText Class="fs-6" Color="Color.Default">Менеджер: @($"{_order.Manager.Surname} {_order.Manager.Name} {_order.Manager.Patronymic}")</MudText></MudItem>
             <MudItem xs="4">
-                @if (_order.Status == OrderStatus.Created)
+                @if (_order.Status == OrderStatus.Created && UserService.CurrentUser.Role == Roles.Manager)
                 {
                     <MudSelect T="User" @bind-Value="_order.Diagnostician" Label="Диагност" ToStringFunc="_userConverter" AnchorOrigin="Origin.BottomCenter">
-
+                        @foreach(User user in _availableDiagnosticians)
+                        {
+                            <MudSelectItem Value="user"></MudSelectItem>
+                        }
                     </MudSelect>                 
                 }
                 else
@@ -55,10 +69,15 @@
                 }
             </MudItem>
             <MudItem xs="4">
-                @if (_order.Status == OrderStatus.Created || _order.Status == OrderStatus.Diagnosed || _order.Status == OrderStatus.InWork)
+                @if ((_order.Status == OrderStatus.Created || _order.Status == OrderStatus.Diagnosed 
+                     || _order.Status == OrderStatus.InWork)
+                     && UserService.CurrentUser.Role == Roles.Manager)
                 {
                     <MudSelect T="User" @bind-Value="_order.Mechanic" Label="Механик" ToStringFunc="_userConverter" AnchorOrigin="Origin.BottomCenter">
-
+                        @foreach(User user in _availableMechanics)
+                        {
+                            <MudSelectItem Value="user"></MudSelectItem>
+                        }
                     </MudSelect>            
                 }
                 else
@@ -76,7 +95,7 @@
         <MudGrid Spacing="5">
             <MudItem><MudText Class="fs-6" Color="Color.Default">Автомобиль: @($"{_order.Car.Model?.Brand.Name} {_order.Car.Model?.Name} {_order.Car.StateNumber}")</MudText></MudItem>
             <MudItem><MudText Class="fs-6" Color="Color.Default">VIN - номер: @(_order.Car.VinNumber)</MudText></MudItem>
-            <MudItem><MudText Class="fs-6" Color="Color.Default">Итоговая стоимость: <MudText Inline Class="fw-bold fs-6" Color="Color.Success">1000 руб.</MudText></MudText></MudItem>
+            <MudItem><MudText Class="fs-6" Color="Color.Default">Итоговая стоимость: <MudText Inline Class="fw-bold fs-6" Color="Color.Success">@_totalPrice руб.</MudText></MudText></MudItem>
         </MudGrid> 
 
         <MudExpansionPanels Class="mt-4" Elevation="4">
@@ -84,18 +103,27 @@
                 <TitleContent>
                     <div class="d-flex justify-content-between align-items-center">
                         <MudText><strong>Неисправности</strong></MudText>
-                        <MudFab  Class="me-4" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Size="Size.Small"></MudFab>
+                        @if (UserService.CurrentUser.Role != Roles.Manager)
+                        {
+                             <MudFab  Class="me-4" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Size="Size.Small"></MudFab>
+                        }     
                     </div>
                 </TitleContent>
                 <ChildContent>
                     <MudTable Items="@_order.Defects" Hover="true" Breakpoint="Breakpoint.Sm">
                         <HeaderContent>
                             <MudTh><strong>Название</strong></MudTh>
-                            <MudTh><strong>Удалить</strong></MudTh>
+                            @if (UserService.CurrentUser.Role != Roles.Manager)
+                            {
+                                <MudTh><strong>Удалить</strong></MudTh>
+                            } 
                         </HeaderContent>
                         <RowTemplate>
                             <MudTd DataLabel="Название">@context.Description</MudTd>
-                            <MudTd DataLabel="Удалить"><MudIconButton Icon="@Icons.Filled.Delete" Size="Size.Medium" Color="Color.Error"></MudIconButton></MudTd>
+                            @if (UserService.CurrentUser.Role != Roles.Manager)
+                            {
+                                <MudTd DataLabel="Удалить"><MudIconButton Icon="@Icons.Filled.Delete" Size="Size.Medium" Color="Color.Error"></MudIconButton></MudTd>
+                            }    
                         </RowTemplate>
                     </MudTable>
                 </ChildContent>
@@ -104,7 +132,10 @@
                 <TitleContent>
                     <div class="d-flex justify-content-between align-items-center">
                         <MudText><strong>Запчасти</strong></MudText>
-                        <MudFab  Class="me-4" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Size="Size.Small"></MudFab>
+                        @if (UserService.CurrentUser.Role != Roles.Manager)
+                        {
+                             <MudFab  Class="me-4" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Size="Size.Small"></MudFab>
+                        } 
                     </div>
                 </TitleContent>
                 <ChildContent>
@@ -114,14 +145,20 @@
                             <MudTh><strong>Модель</strong></MudTh>
                             <MudTh><strong>Цена</strong></MudTh>
                             <MudTh><strong>Количество</strong></MudTh>
-                            <MudTh><strong>Удалить</strong></MudTh>
+                            @if (UserService.CurrentUser.Role != Roles.Manager)
+                            {
+                                <MudTh><strong>Удалить</strong></MudTh>
+                            } 
                         </HeaderContent>
                         <RowTemplate>
                             <MudTd DataLabel="Название">@context.SparePart.Name</MudTd>
                             <MudTd DataLabel="Модель">@context.SparePart.Model?.Name</MudTd>
                             <MudTd DataLabel="Цена">@context.Price руб.</MudTd>
                             <MudTd DataLabel="Количество">@context.Count</MudTd>
-                            <MudTd DataLabel="Удалить"><MudIconButton Icon="@Icons.Filled.Delete" Size="Size.Medium" Color="Color.Error"></MudIconButton></MudTd>
+                            @if (UserService.CurrentUser.Role != Roles.Manager)
+                            {
+                                <MudTd DataLabel="Удалить"><MudIconButton Icon="@Icons.Filled.Delete" Size="Size.Medium" Color="Color.Error"></MudIconButton></MudTd>
+                            }        
                         </RowTemplate>
                     </MudTable>
                 </ChildContent>  
@@ -130,7 +167,10 @@
                 <TitleContent>
                     <div class="d-flex justify-content-between align-items-center">
                         <MudText><strong>Ремонтные работы</strong></MudText>
-                        <MudFab  Class="me-4" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Size="Size.Small"></MudFab>
+                        @if (UserService.CurrentUser.Role != Roles.Manager)
+                        {
+                             <MudFab Class="me-4" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Size="Size.Small"></MudFab>
+                        } 
                     </div>
                 </TitleContent>
                 <ChildContent>
@@ -139,26 +179,34 @@
                             <MudTh><strong>Описание</strong></MudTh>
                             <MudTh><strong>Цена</strong></MudTh>
                             <MudTh><strong>Количество</strong></MudTh>
-                            <MudTh><strong>Удалить</strong></MudTh>
+                            @if (UserService.CurrentUser.Role != Roles.Manager)
+                            {
+                                <MudTh><strong>Удалить</strong></MudTh>
+                            } 
                         </HeaderContent>
                         <RowTemplate>
                             <MudTd DataLabel="Описание">@context.Repair?.Description</MudTd>
                             <MudTd DataLabel="Цена">@context.Price руб.</MudTd>
                             <MudTd Class="p-3" DataLabel="Количество">@context.Count</MudTd>
-                            <MudTd DataLabel="Удалить"><MudIconButton Icon="@Icons.Filled.Delete" Size="Size.Medium" Color="Color.Error"></MudIconButton></MudTd>
+                            @if (UserService.CurrentUser.Role != Roles.Manager)
+                            {
+                                 <MudTd DataLabel="Удалить"><MudIconButton Icon="@Icons.Filled.Delete" Size="Size.Medium" OnClick="@(() => DeleteRepair(context))" Color="Color.Error"></MudIconButton></MudTd>
+                            }            
                         </RowTemplate>
                     </MudTable>
                 </ChildContent>
             </MudExpansionPanel>
         </MudExpansionPanels>
     }
-
 </MudPaper>
 
 @code {
     [Parameter] public string PurchaseOrderId { get; set; }
     private PurchaseOrder _order = null;
+    private List<User> _availableDiagnosticians = new();
+    private List<User> _availableMechanics = new();
     private bool _loading = true;
+    private int _totalPrice => GetTotalPrice();
 
     readonly Func<User, string?> _userConverter = p => ($"{p?.Surname} {p?.Name} {p?.Patronymic}");
     readonly Func<OrderStatus, string?> _statusConverter = p => p.GetDisplayName();
@@ -174,7 +222,11 @@
                 _order = res.Data;
 
                 if (_order.CompletedWorks == null)
-                    _order.CompletedWorks = new();
+                    _order.CompletedWorks = new()
+                    {
+                        new RepairListItem() {Repair = new Repair() {Description = "Замена двигателя"}, Count = 2, Price = 3000},
+                        new RepairListItem() {Repair = new Repair() {Description = "Замена двигателя"}, Count = 1, Price = 3000}
+                    };
 
                 if (_order.Defects == null)
                     _order.Defects = new();
@@ -184,6 +236,32 @@
             }
 
             _loading = false;
+
+            await FillList();
         }
+    }
+
+    private async Task FillList()
+    {
+        var res = await UserService.GetAvailableUsersByRoleAsync(Roles.Diagnostician);
+
+        _availableDiagnosticians = res.Data;
+
+        res = await UserService.GetAvailableUsersByRoleAsync(Roles.Mechanic);
+
+        _availableMechanics = res.Data;
+    }
+
+    private int GetTotalPrice()
+    {
+        int repairTotal = _order.CompletedWorks.Sum(x => x.Count * x.Price);
+        int sparePartsTotal = _order.SpareParts.Sum(x => x.Count * x.Price);
+
+        return repairTotal + sparePartsTotal;
+    }
+
+    private void DeleteRepair(RepairListItem repair)
+    {
+        _order.CompletedWorks.Remove(repair);
     }
 }

@@ -9,11 +9,14 @@ namespace CarService.Domain.Services
     public class UserService : IUserService
     {
         private IUserRepository _userRepository;
+        private IPurchaseOrderRepository _purchaseOrderRepository;
+
         public User CurrentUser { get; set; }
 
-        public UserService(IUserRepository userRepository)
+        public UserService(IUserRepository userRepository, IPurchaseOrderRepository purchaseOrderRepository)
         {
             _userRepository = userRepository;
+            _purchaseOrderRepository = purchaseOrderRepository;
         }
 
         public async Task<BaseResponse<User>> CreateUserAsync(User user)
@@ -185,6 +188,57 @@ namespace CarService.Domain.Services
                     Success = false,
                     Description = "Внутренняя ошибка"
                 };
+            }
+        }
+
+        public async Task<BaseResponse<List<User>>> GetAvailableUsersByRoleAsync(Roles role)
+        {
+            try
+            {
+                var users = await _userRepository.GetUsersByRoleAsync(role);
+
+                List<User> result = new List<User>();
+
+                for(int i = 0; i < users.Count; ++i)
+                {
+                    if(IsUserAvailable(users[i]))
+                    {
+                        result.Add(users[i]);
+                    }
+                }
+
+                return new BaseResponse<List<User>>()
+                {
+                    Success = true,
+                    Data = result
+                };
+            }
+            catch
+            {
+                return new BaseResponse<List<User>>()
+                {
+                    Success = false,
+                    Description = "Внутренняя ошибка"
+                };
+            }
+        }
+
+        private bool IsUserAvailable(User user)
+        {
+            switch(user.Role)
+            {
+                case Enums.Roles.Diagnostician:
+                    return !_purchaseOrderRepository
+                        .IsPurchaseOrderExistByStatusAndDiagnostician(Enums.OrderStatus.Created, user.Id);
+                case Enums.Roles.Mechanic:
+                    return !_purchaseOrderRepository
+                        .IsPurchaseOrderExistByStatusAndMechanic(Enums.OrderStatus.Created, user.Id) ||
+                        _purchaseOrderRepository
+                        .IsPurchaseOrderExistByStatusAndMechanic(Enums.OrderStatus.Diagnosed, user.Id) ||
+                        _purchaseOrderRepository
+                        .IsPurchaseOrderExistByStatusAndMechanic(Enums.OrderStatus.InWork, user.Id);
+                default:
+                    return false;
             }
         }
     }

@@ -1,4 +1,5 @@
-﻿using CarService.Domain.Models;
+﻿using CarService.Domain.Enums;
+using CarService.Domain.Models;
 
 namespace CarService.Domain.Repositories
 {
@@ -11,6 +12,10 @@ namespace CarService.Domain.Repositories
         public Task<PurchaseOrder> GetPurchaseOrderByIdAsync(string id);
 
         public PurchaseOrder GetPurchaseOrderById(string id);
+
+        public bool IsPurchaseOrderExistByStatusAndDiagnostician(OrderStatus status, string diagnosticianId);
+
+        public bool IsPurchaseOrderExistByStatusAndMechanic(OrderStatus status, string mechanicId);
 
         public Task UpdatePurchaseOrderAsync(string id, PurchaseOrder purchaseOrder);
     }

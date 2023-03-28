@@ -108,6 +108,8 @@
 
     private async void ClientSelect(Client client)
     {
+        Order.Car = null;
+
         Order.Client = client;
 
         if (client is not null)
