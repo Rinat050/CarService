@@ -1,0 +1,85 @@
+﻿@using CarService.Domain.Models
+@using CarService.Domain.Response
+@using CarService.Domain.Services.Interfaces
+
+@inject ISparePartService SparePartService
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <DialogContent>
+        <MudTable T="SparePart" Class="mt-5" Items="@AllSpareParts" Filter="new Func<SparePart,bool>(SearchTextFilter)" Hover="true" Breakpoint="Breakpoint.Sm" SelectedItemChanged="@SelectSparePart">
+            <ToolBarContent>
+                <MudTextField T="string" Label="Поиск" @bind-Value="_searchText"></MudTextField>
+            </ToolBarContent>
+            <HeaderContent>
+                <MudTh>Название</MudTh>
+                <MudTh>Модель</MudTh>
+                <MudTh>Стоимость</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Название">@context.Name</MudTd>
+                <MudTd DataLabel="Модель">@(context.Model.Brand.Name + " " + context.Model.Name)</MudTd>
+                <MudTd DataLabel="Стоимость">@context.Price руб.</MudTd>
+            </RowTemplate>
+        </MudTable>
+    </DialogContent>
+</MudDialog>
+
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    [Parameter] public List<SparePartListItem> CurrentSpareParts { get; set; }
+    [Parameter] public Model CarModel { get; set; }
+
+    public List<SparePart> AllSpareParts { get; set; } = null!;
+
+    private string _searchText = "";
+
+    private void Close() => MudDialog.Close();
+
+    protected async override Task OnInitializedAsync()
+    {
+        var res = await SparePartService.GetAllSparePartsAsync();
+
+        AllSpareParts = res.Data!;
+
+        _searchText = CarModel.Brand.Name + " " + CarModel.Name;
+    }
+
+    private void SelectSparePart(SparePart sparePart)
+    {
+        var existSparePart = CurrentSpareParts.FirstOrDefault(x => x.SparePart.Id == sparePart.Id);
+
+        if (existSparePart is null)
+        {
+            CurrentSpareParts.Add
+            (
+                new SparePartListItem()
+                {
+                    SparePart = sparePart,
+                    Count = 1,
+                    Price = sparePart.Price
+                }
+            );
+        }
+
+        Close();
+    }
+
+    private bool SearchTextFilter(SparePart sparePart) => FilterFunc(sparePart, _searchText);
+
+    private bool FilterFunc(SparePart sparePart, string searchString)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+        if (sparePart.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (sparePart.Model.Brand.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (sparePart.Model.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if ($"{sparePart.Model.Brand.Name} {sparePart.Model.Name}".Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        return false;
+    }
+}

@@ -142,7 +142,7 @@
                             <MudText><strong>Запчасти</strong></MudText>
                             @if (UserService.CurrentUser.Role != Roles.Manager)
                             {
-                                 <MudFab  Class="me-4" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Size="Size.Small"></MudFab>
+                                 <MudFab  Class="me-4" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Size="Size.Small" OnClick="@(() => OpenSparePartsDialog())"></MudFab>
                             } 
                         </div>
                     </TitleContent>
@@ -160,7 +160,7 @@
                             </HeaderContent>
                             <RowTemplate>
                                 <MudTd DataLabel="Название">@context.SparePart.Name</MudTd>
-                                <MudTd DataLabel="Модель">@context.SparePart.Model?.Name</MudTd>
+                                <MudTd DataLabel="Модель">@(context.SparePart.Model?.Brand.Name + " " + context.SparePart.Model?.Name)</MudTd>
                                 <MudTd DataLabel="Цена">@context.Price руб.</MudTd>
                                 <MudTd DataLabel="Количество">@context.Count</MudTd>
                                 @if (UserService.CurrentUser.Role != Roles.Manager)
@@ -177,7 +177,7 @@
                             <MudText><strong>Ремонтные работы</strong></MudText>
                             @if (UserService.CurrentUser.Role != Roles.Manager)
                             {
-                                 <MudFab Class="me-4" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Size="Size.Small"></MudFab>
+                                 <MudFab Class="me-4" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Size="Size.Small" OnClick="@(() => OpenRepairsDialog())"></MudFab>
                             } 
                         </div>
                     </TitleContent>
@@ -291,6 +291,31 @@
 
         parameters.Add("CurrentDefects", _order.Defects);
         var dialog = await DialogService.ShowAsync<DefectsListDialog>("Список неисправностей", parameters, options: maxWidth);
+        var result = await dialog.Result;
+
+        StateHasChanged();
+    }
+
+    private async Task OpenSparePartsDialog()
+    {
+        DialogOptions maxWidth = new DialogOptions() { MaxWidth = MaxWidth.Medium, FullWidth = true };
+        var parameters = new DialogParameters();
+
+        parameters.Add("CurrentSpareParts", _order.SpareParts);
+        parameters.Add("CarModel", _order.Car.Model);
+        var dialog = await DialogService.ShowAsync<SparePartsListDialog>("Список запчастей", parameters, options: maxWidth);
+        var result = await dialog.Result;
+
+        StateHasChanged();
+    }
+
+     private async Task OpenRepairsDialog()
+    {
+        DialogOptions maxWidth = new DialogOptions() { MaxWidth = MaxWidth.Medium, FullWidth = true };
+        var parameters = new DialogParameters();
+
+        parameters.Add("CurrentWorks", _order.CompletedWorks);
+        var dialog = await DialogService.ShowAsync<RepairsListDialog>("Список ремонтных работ", parameters, options: maxWidth);
         var result = await dialog.Result;
 
         StateHasChanged();

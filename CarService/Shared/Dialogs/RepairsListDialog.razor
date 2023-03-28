@@ -1,0 +1,74 @@
+﻿@using CarService.Domain.Models
+@using CarService.Domain.Response
+@using CarService.Domain.Services.Interfaces
+
+@inject IRepairService RepairService
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <DialogContent>
+        <MudTable T="Repair" Class="mt-5" Items="@AllRepairs" Filter="new Func<Repair,bool>(SearchTextFilter)" Hover="true" Breakpoint="Breakpoint.Sm" SelectedItemChanged="@SelectRepair">
+            <ToolBarContent>
+                <MudTextField T="string" Label="Поиск" @bind-Value="_searchText"></MudTextField>
+            </ToolBarContent>
+            <HeaderContent>
+                <MudTh>Название</MudTh>
+                <MudTh>Стоимость</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Название">@context.Description</MudTd>
+                <MudTd DataLabel="Стоимость">@context.Cost руб.</MudTd>
+            </RowTemplate>
+        </MudTable>
+    </DialogContent>
+</MudDialog>
+
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    [Parameter] public List<RepairListItem> CurrentWorks { get; set; }
+
+    public List<Repair> AllRepairs { get; set; } = null!;
+
+    private string _searchText = "";
+
+    private void Close() => MudDialog.Close();
+
+    protected async override Task OnInitializedAsync()
+    {
+        var res = await RepairService.GetAllRepairsAsync();
+
+        AllRepairs = res.Data!;
+    }
+
+    private void SelectRepair(Repair repair)
+    {
+        var existRepair = CurrentWorks.FirstOrDefault(x => x.Repair.Id == repair.Id);
+
+        if (existRepair is null)
+        {
+            CurrentWorks.Add
+            (
+                new RepairListItem()
+                {
+                    Repair = repair,
+                    Count = 1,
+                    Price = repair.Cost
+                }
+            );
+        }
+
+        Close();
+    }
+
+    private bool SearchTextFilter(Repair repair) => FilterFunc(repair, _searchText);
+
+    private bool FilterFunc(Repair repair, string searchString)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+        if (repair.Description.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        return false;
+    }
+}
