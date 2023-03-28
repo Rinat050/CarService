@@ -51,7 +51,7 @@
 @code {
     [CascadingParameter] MudDialogInstance MudDialog { get; set; } = null!;
 
-    [Parameter] public CreatePurchaseOrderCredentials Order { get; set; } 
+    [Parameter] public CreatePurchaseOrderCredentials Order { get; set; } = null!;
 
     private List<Client> _clients = new();
     private List<Car> _clientCars = new();
@@ -73,15 +73,15 @@
     {
         var resultClients = await ClientService.GetAllClientsAsync();
 
-        _clients = resultClients.Data;
+        _clients = resultClients.Data!;
 
-        var resDiagnost = await UserService.GetUsersByRoleAsync(Domain.Enums.Roles.Diagnostician);
+        var resDiagnost = await UserService.GetAvailableUsersByRoleAsync(Domain.Enums.Roles.Diagnostician);
 
-        _diagnosticians = resDiagnost.Data;
+        _diagnosticians = resDiagnost.Data!;
 
-        var resMechanic = await UserService.GetUsersByRoleAsync(Domain.Enums.Roles.Mechanic);
+        var resMechanic = await UserService.GetAvailableUsersByRoleAsync(Domain.Enums.Roles.Mechanic);
 
-        _mechanics = resMechanic.Data;
+        _mechanics = resMechanic.Data!;
     }
 
     protected override void OnInitialized()

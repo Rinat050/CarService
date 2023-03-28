@@ -99,7 +99,7 @@
         </MudGrid> 
 
         <MudExpansionPanels Class="mt-4" Elevation="4">
-            <MudExpansionPanel Text="Неисправности">   
+            <MudExpansionPanel>   
                 <TitleContent>
                     <div class="d-flex justify-content-between align-items-center">
                         <MudText><strong>Неисправности</strong></MudText>
@@ -201,8 +201,8 @@
 </MudPaper>
 
 @code {
-    [Parameter] public string PurchaseOrderId { get; set; }
-    private PurchaseOrder _order = null;
+    [Parameter] public string PurchaseOrderId { get; set; } = null!;
+    private PurchaseOrder _order = null!;
     private List<User> _availableDiagnosticians = new();
     private List<User> _availableMechanics = new();
     private bool _loading = true;
@@ -219,7 +219,7 @@
 
             if(res.Success)
             {
-                _order = res.Data;
+                _order = res.Data!;
 
                 if (_order.CompletedWorks == null)
                     _order.CompletedWorks = new()
@@ -245,23 +245,23 @@
     {
         var res = await UserService.GetAvailableUsersByRoleAsync(Roles.Diagnostician);
 
-        _availableDiagnosticians = res.Data;
+        _availableDiagnosticians = res.Data!;
 
         res = await UserService.GetAvailableUsersByRoleAsync(Roles.Mechanic);
 
-        _availableMechanics = res.Data;
+        _availableMechanics = res.Data!;
     }
 
     private int GetTotalPrice()
     {
-        int repairTotal = _order.CompletedWorks.Sum(x => x.Count * x.Price);
-        int sparePartsTotal = _order.SpareParts.Sum(x => x.Count * x.Price);
+        int repairTotal = _order.CompletedWorks!.Sum(x => x.Count * x.Price);
+        int sparePartsTotal = _order.SpareParts!.Sum(x => x.Count * x.Price);
 
         return repairTotal + sparePartsTotal;
     }
 
     private void DeleteRepair(RepairListItem repair)
     {
-        _order.CompletedWorks.Remove(repair);
+        _order.CompletedWorks!.Remove(repair);
     }
 }

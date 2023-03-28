@@ -16,16 +16,19 @@
     {
         <MudAlert Variant="Variant.Outlined" ContentAlignment="HorizontalAlignment.Center" Severity="Severity.Warning">Необходимо авторизоваться!</MudAlert>
     }
-    else if(UserService.CurrentUser.Role is Domain.Enums.Roles.Admin || UserService.CurrentUser.Role is Domain.Enums.Roles.Manager
-    || UserService.CurrentUser.Role is Domain.Enums.Roles.Diagnostician || UserService.CurrentUser.Role is Domain.Enums.Roles.Mechanic){
+    else
+    {
         <MudGrid>
             <MudItem><MudText Typo="Typo.h6" Class="fw-bold" Color="Color.Primary">ЗАКАЗЫ-НАРЯДЫ</MudText></MudItem>
             <MudSpacer/>
-            <MudItem>
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@OpenCreateOrderlDialog">
-                    <MudText Typo="Typo.button" Class="fw-bold">НОВЫЙ ЗАКАЗ</MudText>
-                </MudButton>
-            </MudItem>
+            @if (UserService.CurrentUser.Role == Roles.Manager)
+            {
+                 <MudItem>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@OpenCreateOrderlDialog">
+                        <MudText Typo="Typo.button" Class="fw-bold">НОВЫЙ ЗАКАЗ</MudText>
+                    </MudButton>
+                </MudItem>
+            }
         </MudGrid>  
 
         <MudTable Class="mt-5" Items="@_orders" Hover="true" Breakpoint="Breakpoint.Sm">
@@ -47,14 +50,10 @@
             </RowTemplate>
         </MudTable>
     }
-    else
-    {
-        <MudAlert Variant="Variant.Outlined" ContentAlignment="HorizontalAlignment.Center" Severity="Severity.Warning">Недостаточно прав!</MudAlert>
-    }
 </MudPaper>
 
 @code {
-    private List<PurchaseOrderTableItem> _orders;
+    private List<PurchaseOrderTableItem>? _orders;
 
     protected async override Task OnInitializedAsync()
     {
@@ -63,9 +62,22 @@
 
     private async Task FillList()
     {
-        var res = await OrderService.GetAllPurchaseOrdersAsync();
+        BaseResponse<List<PurchaseOrderTableItem>> res;
 
-        _orders = res.Data;
+        if (UserService.CurrentUser.Role is Roles.Diagnostician)
+        {
+            res = await OrderService.GetPurchaseOrdersByDiagnosticianIdAsync(UserService.CurrentUser.Id);
+        }
+        else if (UserService.CurrentUser.Role is Roles.Mechanic)
+        {
+            res = await OrderService.GetPurchaseOrdersByMechanicIdAsync(UserService.CurrentUser.Id);
+        }
+        else
+        {
+            res = await OrderService.GetAllPurchaseOrdersAsync();
+        }
+
+        _orders = res.Data!;
     }
 
     private async Task OpenCreateOrderlDialog()
@@ -79,7 +91,7 @@
         }
     }
 
-    private async Task OpenEditOrderDialog(string orderId)
+    private void OpenEditOrderDialog(string orderId)
     {
         NavManager.NavigateTo($"/purchaseOrder/{orderId}");
     }

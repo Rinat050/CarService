@@ -209,5 +209,47 @@ namespace CarService.Database.Repositories
 
             return false;
         }
+
+        public async Task<List<PurchaseOrderTableItem>> GetPurchaseOrdersByDiagnosticianIdAsync(string diagnosticianId)
+        {
+            var purchaseOrders = await _purchaseOrders
+               .FindAsync<PurchaseOrderDb>(x => x.DiagnosticianId == diagnosticianId);
+
+            return purchaseOrders
+                .ToEnumerable()
+                .Select(x => new PurchaseOrderTableItem()
+                {
+                    PurchaseOrderId = x.Id.ToString(),
+                    Client = $"{_clientRepository.GetClientById(x.ClientId).Surname} " +
+                    $"{_clientRepository.GetClientById(x.ClientId).Name}",
+                    CreatedDate = x.CreatedDate,
+                    Car = _carRepository.GetCarById(x.CarId).Model.Brand.Name + " "
+                        + _carRepository.GetCarById(x.CarId).Model.Name + " "
+                        + _carRepository.GetCarById(x.CarId).StateNumber,
+                    TotalCost = GetTotalCost(x.CompletedWorks, x.SpareParts),
+                    Status = (OrderStatus)x.Status,
+                }).ToList<PurchaseOrderTableItem>();
+        }
+
+        public async Task<List<PurchaseOrderTableItem>> GetPurchaseOrdersByMechanicIdAsync(string mechanicId)
+        {
+            var purchaseOrders = await _purchaseOrders
+               .FindAsync<PurchaseOrderDb>(x => x.MechanicId == mechanicId);
+
+            return purchaseOrders
+                .ToEnumerable()
+                .Select(x => new PurchaseOrderTableItem()
+                {
+                    PurchaseOrderId = x.Id.ToString(),
+                    Client = $"{_clientRepository.GetClientById(x.ClientId).Surname} " +
+                    $"{_clientRepository.GetClientById(x.ClientId).Name}",
+                    CreatedDate = x.CreatedDate,
+                    Car = _carRepository.GetCarById(x.CarId).Model.Brand.Name + " "
+                        + _carRepository.GetCarById(x.CarId).Model.Name + " "
+                        + _carRepository.GetCarById(x.CarId).StateNumber,
+                    TotalCost = GetTotalCost(x.CompletedWorks, x.SpareParts),
+                    Status = (OrderStatus)x.Status,
+                }).ToList<PurchaseOrderTableItem>();
+        }
     }
 }

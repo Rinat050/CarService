@@ -9,6 +9,10 @@ namespace CarService.Domain.Repositories
 
         public Task<List<PurchaseOrderTableItem>> GetAllPurchaseOrdersAsync();
 
+        public Task<List<PurchaseOrderTableItem>> GetPurchaseOrdersByDiagnosticianIdAsync(string diagnosticianId);
+
+        public Task<List<PurchaseOrderTableItem>> GetPurchaseOrdersByMechanicIdAsync(string mechanicId);
+
         public Task<PurchaseOrder> GetPurchaseOrderByIdAsync(string id);
 
         public PurchaseOrder GetPurchaseOrderById(string id);

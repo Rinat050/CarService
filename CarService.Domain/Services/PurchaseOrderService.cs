@@ -103,7 +103,51 @@ namespace CarService.Domain.Services
                     Description = "Внутренняя ошибка!"
                 };
             };
-        }     
+        }
+
+        public async Task<BaseResponse<List<PurchaseOrderTableItem>>> GetPurchaseOrdersByDiagnosticianIdAsync(string diagnosticianId)
+        {
+            try
+            {
+                var orders = await _orderRepository.GetPurchaseOrdersByDiagnosticianIdAsync(diagnosticianId);
+
+                return new BaseResponse<List<PurchaseOrderTableItem>>()
+                {
+                    Success = true,
+                    Data = orders
+                };
+            }
+            catch
+            {
+                return new BaseResponse<List<PurchaseOrderTableItem>>()
+                {
+                    Success = false,
+                    Description = "Внутренняя ошибка!"
+                };
+            };
+        }
+
+        public async Task<BaseResponse<List<PurchaseOrderTableItem>>> GetPurchaseOrdersByMechanicIdAsync(string mechanicId)
+        {
+            try
+            {
+                var orders = await _orderRepository.GetPurchaseOrdersByMechanicIdAsync(mechanicId);
+
+                return new BaseResponse<List<PurchaseOrderTableItem>>()
+                {
+                    Success = true,
+                    Data = orders
+                };
+            }
+            catch
+            {
+                return new BaseResponse<List<PurchaseOrderTableItem>>()
+                {
+                    Success = false,
+                    Description = "Внутренняя ошибка!"
+                };
+            };
+        }
 
         public async Task<BaseResponse<PurchaseOrder>> UpdatePurchaseOrderAsync(PurchaseOrder order)
         {
