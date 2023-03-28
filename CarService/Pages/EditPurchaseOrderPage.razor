@@ -9,194 +9,201 @@
 @inject ISnackbar Snackbar
 
 <MudPaper Class="m-2 p-4" Elevation="3">
-    @if (_loading)
+    @if (UserService.CurrentUser is null)
     {
-        <MudProgressCircular Color="Color.Primary" Size="Size.Medium" Indeterminate="true"></MudProgressCircular>
-    }
-    else if (_order is null)
-    {
-        <MudAlert Variant="Variant.Outlined" ContentAlignment="HorizontalAlignment.Center" Severity="Severity.Warning">Заказ-наряд не найден!</MudAlert>
+        <MudAlert Variant="Variant.Outlined" ContentAlignment="HorizontalAlignment.Center" Severity="Severity.Warning">Необходимо авторизоваться!</MudAlert>
     }
     else
     {
-        <MudGrid>
-            <MudItem><MudText Typo="Typo.h6" Class="fw-bold" Color="Color.Primary">ЗАКАЗ-НАРЯД</MudText></MudItem>
-            <MudSpacer/>
-            <MudItem>
-                <MudButton Variant="Variant.Filled" Color="Color.Primary">
-                    <MudText Typo="Typo.button" Class="fw-bold">СОХРАНИТЬ</MudText>
-                </MudButton>
-            </MudItem>
-        </MudGrid>  
+        @if (_loading)
+        {
+            <MudProgressCircular Color="Color.Primary" Size="Size.Medium" Indeterminate="true"></MudProgressCircular>
+        }
+        else if (_order is null)
+        {
+            <MudAlert Variant="Variant.Outlined" ContentAlignment="HorizontalAlignment.Center" Severity="Severity.Warning">Заказ-наряд не найден!</MudAlert>
+        }
+        else
+        {
+            <MudGrid>
+                <MudItem><MudText Typo="Typo.h6" Class="fw-bold" Color="Color.Primary">ЗАКАЗ-НАРЯД</MudText></MudItem>
+                <MudSpacer/>
+                <MudItem>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary">
+                        <MudText Typo="Typo.button" Class="fw-bold">СОХРАНИТЬ</MudText>
+                    </MudButton>
+                </MudItem>
+            </MudGrid>  
 
-        <MudGrid Spacing="5" Class="align-items-center" Justify="Justify.FlexStart">
-            <MudItem><MudText Class="fs-6" Color="Color.Default">Дата создания: @(_order.CreatedDate)</MudText></MudItem>
-            <MudItem>
-                <MudSelect @bind-Value="_order.Status" Label="Статус" ToStringFunc="_statusConverter" AnchorOrigin="Origin.BottomCenter">
-                    @if(UserService.CurrentUser.Role == Roles.Manager)
-                    {
-                        <MudSelectItem Value="OrderStatus.Completed"></MudSelectItem>
-                        <MudSelectItem Value="OrderStatus.RegectedByClient"></MudSelectItem>
-                    }
-                    else if(UserService.CurrentUser.Role == Roles.Diagnostician)
-                    {
-                        <MudSelectItem Value="OrderStatus.Diagnosed"></MudSelectItem>
-                    }
-                    else if(UserService.CurrentUser.Role == Roles.Mechanic)
-                    {
-                        <MudSelectItem Value="OrderStatus.InWork"></MudSelectItem>
-                        <MudSelectItem Value="OrderStatus.ClosedByWork"></MudSelectItem>
-                    }
-            </MudSelect>
-            </MudItem>
-        </MudGrid>  
-
-         <MudGrid Spacing="5" Class="align-items-center" Justify="Justify.FlexStart">
-            <MudItem><MudText Class="fs-6" Color="Color.Default">Менеджер: @($"{_order.Manager.Surname} {_order.Manager.Name} {_order.Manager.Patronymic}")</MudText></MudItem>
-            <MudItem xs="4">
-                @if (_order.Status == OrderStatus.Created && UserService.CurrentUser.Role == Roles.Manager)
-                {
-                    <MudSelect T="User" @bind-Value="_order.Diagnostician" Label="Диагност" ToStringFunc="_userConverter" AnchorOrigin="Origin.BottomCenter">
-                        @foreach(User user in _availableDiagnosticians)
+            <MudGrid Spacing="5" Class="align-items-center" Justify="Justify.FlexStart">
+                <MudItem><MudText Class="fs-6" Color="Color.Default">Дата создания: @(_order.CreatedDate)</MudText></MudItem>
+                <MudItem>
+                    <MudSelect @bind-Value="_order.Status" Label="Статус" ToStringFunc="_statusConverter" AnchorOrigin="Origin.BottomCenter">
+                        @if(UserService.CurrentUser.Role == Roles.Manager)
                         {
-                            <MudSelectItem Value="user"></MudSelectItem>
+                            <MudSelectItem Value="OrderStatus.Completed"></MudSelectItem>
+                            <MudSelectItem Value="OrderStatus.RegectedByClient"></MudSelectItem>
                         }
-                    </MudSelect>                 
-                }
-                else
-                {
-                     <MudText Class="fs-6" Color="Color.Default">Диагност: @($"{_order.Diagnostician.Surname} {_order.Diagnostician.Name} {_order.Diagnostician.Patronymic}")</MudText>
-                }
-            </MudItem>
-            <MudItem xs="4">
-                @if ((_order.Status == OrderStatus.Created || _order.Status == OrderStatus.Diagnosed 
-                     || _order.Status == OrderStatus.InWork)
-                     && UserService.CurrentUser.Role == Roles.Manager)
-                {
-                    <MudSelect T="User" @bind-Value="_order.Mechanic" Label="Механик" ToStringFunc="_userConverter" AnchorOrigin="Origin.BottomCenter">
-                        @foreach(User user in _availableMechanics)
+                        else if(UserService.CurrentUser.Role == Roles.Diagnostician)
                         {
-                            <MudSelectItem Value="user"></MudSelectItem>
+                            <MudSelectItem Value="OrderStatus.Diagnosed"></MudSelectItem>
                         }
-                    </MudSelect>            
-                }
-                else
-                {
-                     <MudText Class="fs-6" Color="Color.Default">Механик: @($"{_order.Mechanic.Surname} {_order.Mechanic.Name} {_order.Mechanic.Patronymic}")</MudText>
-                }
-            </MudItem>
-        </MudGrid>  
-
-        <MudGrid Spacing="5">
-            <MudItem><MudText Class="fs-6" Color="Color.Default">Клиент: @($"{_order.Client.Surname} {_order.Client.Name} {_order.Client.Patronymic}")</MudText></MudItem>
-            <MudItem><MudText Class="fs-6" Color="Color.Default">Телефон: @(_order.Client.PhoneNumber)</MudText></MudItem>
-        </MudGrid> 
-
-        <MudGrid Spacing="5">
-            <MudItem><MudText Class="fs-6" Color="Color.Default">Автомобиль: @($"{_order.Car.Model?.Brand.Name} {_order.Car.Model?.Name} {_order.Car.StateNumber}")</MudText></MudItem>
-            <MudItem><MudText Class="fs-6" Color="Color.Default">VIN - номер: @(_order.Car.VinNumber)</MudText></MudItem>
-            <MudItem><MudText Class="fs-6" Color="Color.Default">Итоговая стоимость: <MudText Inline Class="fw-bold fs-6" Color="Color.Success">@_totalPrice руб.</MudText></MudText></MudItem>
-        </MudGrid> 
-
-        <MudExpansionPanels Class="mt-4" Elevation="4">
-            <MudExpansionPanel>   
-                <TitleContent>
-                    <div class="d-flex justify-content-between align-items-center">
-                        <MudText><strong>Неисправности</strong></MudText>
-                        @if (UserService.CurrentUser.Role != Roles.Manager)
+                        else if(UserService.CurrentUser.Role == Roles.Mechanic)
                         {
-                             <MudFab  Class="me-4" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Size="Size.Small"></MudFab>
-                        }     
-                    </div>
-                </TitleContent>
-                <ChildContent>
-                    <MudTable Items="@_order.Defects" Hover="true" Breakpoint="Breakpoint.Sm">
-                        <HeaderContent>
-                            <MudTh><strong>Название</strong></MudTh>
+                            <MudSelectItem Value="OrderStatus.InWork"></MudSelectItem>
+                            <MudSelectItem Value="OrderStatus.ClosedByWork"></MudSelectItem>
+                        }
+                </MudSelect>
+                </MudItem>
+            </MudGrid>  
+
+             <MudGrid Spacing="5" Class="align-items-center" Justify="Justify.FlexStart">
+                <MudItem><MudText Class="fs-6" Color="Color.Default">Менеджер: @($"{_order.Manager.Surname} {_order.Manager.Name} {_order.Manager.Patronymic}")</MudText></MudItem>
+                <MudItem xs="4">
+                    @if (_order.Status == OrderStatus.Created && UserService.CurrentUser.Role == Roles.Manager)
+                    {
+                        <MudSelect T="User" @bind-Value="_order.Diagnostician" Label="Диагност" ToStringFunc="_userConverter" AnchorOrigin="Origin.BottomCenter">
+                            @foreach(User user in _availableDiagnosticians)
+                            {
+                                <MudSelectItem Value="user"></MudSelectItem>
+                            }
+                        </MudSelect>                 
+                    }
+                    else
+                    {
+                         <MudText Class="fs-6" Color="Color.Default">Диагност: @($"{_order.Diagnostician.Surname} {_order.Diagnostician.Name} {_order.Diagnostician.Patronymic}")</MudText>
+                    }
+                </MudItem>
+                <MudItem xs="4">
+                    @if ((_order.Status == OrderStatus.Created || _order.Status == OrderStatus.Diagnosed 
+                         || _order.Status == OrderStatus.InWork)
+                         && UserService.CurrentUser.Role == Roles.Manager)
+                    {
+                        <MudSelect T="User" @bind-Value="_order.Mechanic" Label="Механик" ToStringFunc="_userConverter" AnchorOrigin="Origin.BottomCenter">
+                            @foreach(User user in _availableMechanics)
+                            {
+                                <MudSelectItem Value="user"></MudSelectItem>
+                            }
+                        </MudSelect>            
+                    }
+                    else
+                    {
+                         <MudText Class="fs-6" Color="Color.Default">Механик: @($"{_order.Mechanic.Surname} {_order.Mechanic.Name} {_order.Mechanic.Patronymic}")</MudText>
+                    }
+                </MudItem>
+            </MudGrid>  
+
+            <MudGrid Spacing="5">
+                <MudItem><MudText Class="fs-6" Color="Color.Default">Клиент: @($"{_order.Client.Surname} {_order.Client.Name} {_order.Client.Patronymic}")</MudText></MudItem>
+                <MudItem><MudText Class="fs-6" Color="Color.Default">Телефон: @(_order.Client.PhoneNumber)</MudText></MudItem>
+            </MudGrid> 
+
+            <MudGrid Spacing="5">
+                <MudItem><MudText Class="fs-6" Color="Color.Default">Автомобиль: @($"{_order.Car.Model?.Brand.Name} {_order.Car.Model?.Name} {_order.Car.StateNumber}")</MudText></MudItem>
+                <MudItem><MudText Class="fs-6" Color="Color.Default">VIN - номер: @(_order.Car.VinNumber)</MudText></MudItem>
+                <MudItem><MudText Class="fs-6" Color="Color.Default">Итоговая стоимость: <MudText Inline Class="fw-bold fs-6" Color="Color.Success">@_totalPrice руб.</MudText></MudText></MudItem>
+            </MudGrid> 
+
+            <MudExpansionPanels Class="mt-4" Elevation="4">
+                <MudExpansionPanel>   
+                    <TitleContent>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <MudText><strong>Неисправности</strong></MudText>
                             @if (UserService.CurrentUser.Role != Roles.Manager)
                             {
-                                <MudTh><strong>Удалить</strong></MudTh>
+                                 <MudFab  Class="me-4" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Size="Size.Small"></MudFab>
+                            }     
+                        </div>
+                    </TitleContent>
+                    <ChildContent>
+                        <MudTable Items="@_order.Defects" Hover="true" Breakpoint="Breakpoint.Sm">
+                            <HeaderContent>
+                                <MudTh><strong>Название</strong></MudTh>
+                                @if (UserService.CurrentUser.Role != Roles.Manager)
+                                {
+                                    <MudTh><strong>Удалить</strong></MudTh>
+                                } 
+                            </HeaderContent>
+                            <RowTemplate>
+                                <MudTd DataLabel="Название">@context.Description</MudTd>
+                                @if (UserService.CurrentUser.Role != Roles.Manager)
+                                {
+                                    <MudTd DataLabel="Удалить"><MudIconButton Icon="@Icons.Filled.Delete" Size="Size.Medium" Color="Color.Error" OnClick="@(() => DeleteDefect(context))"></MudIconButton></MudTd>
+                                }    
+                            </RowTemplate>
+                        </MudTable>
+                    </ChildContent>
+                </MudExpansionPanel>
+                <MudExpansionPanel>
+                    <TitleContent>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <MudText><strong>Запчасти</strong></MudText>
+                            @if (UserService.CurrentUser.Role != Roles.Manager)
+                            {
+                                 <MudFab  Class="me-4" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Size="Size.Small"></MudFab>
                             } 
-                        </HeaderContent>
-                        <RowTemplate>
-                            <MudTd DataLabel="Название">@context.Description</MudTd>
+                        </div>
+                    </TitleContent>
+                    <ChildContent>
+                        <MudTable Items="@_order.SpareParts" Hover="true" Breakpoint="Breakpoint.Sm">
+                            <HeaderContent>
+                                <MudTh><strong>Название</strong></MudTh>
+                                <MudTh><strong>Модель</strong></MudTh>
+                                <MudTh><strong>Цена</strong></MudTh>
+                                <MudTh><strong>Количество</strong></MudTh>
+                                @if (UserService.CurrentUser.Role != Roles.Manager)
+                                {
+                                    <MudTh><strong>Удалить</strong></MudTh>
+                                } 
+                            </HeaderContent>
+                            <RowTemplate>
+                                <MudTd DataLabel="Название">@context.SparePart.Name</MudTd>
+                                <MudTd DataLabel="Модель">@context.SparePart.Model?.Name</MudTd>
+                                <MudTd DataLabel="Цена">@context.Price руб.</MudTd>
+                                <MudTd DataLabel="Количество">@context.Count</MudTd>
+                                @if (UserService.CurrentUser.Role != Roles.Manager)
+                                {
+                                    <MudTd DataLabel="Удалить"><MudIconButton Icon="@Icons.Filled.Delete" Size="Size.Medium" Color="Color.Error" OnClick="@(() => DeleteSparePart(context))"></MudIconButton></MudTd>
+                                }        
+                            </RowTemplate>
+                        </MudTable>
+                    </ChildContent>  
+                </MudExpansionPanel>
+                <MudExpansionPanel>
+                    <TitleContent>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <MudText><strong>Ремонтные работы</strong></MudText>
                             @if (UserService.CurrentUser.Role != Roles.Manager)
                             {
-                                <MudTd DataLabel="Удалить"><MudIconButton Icon="@Icons.Filled.Delete" Size="Size.Medium" Color="Color.Error"></MudIconButton></MudTd>
-                            }    
-                        </RowTemplate>
-                    </MudTable>
-                </ChildContent>
-            </MudExpansionPanel>
-            <MudExpansionPanel>
-                <TitleContent>
-                    <div class="d-flex justify-content-between align-items-center">
-                        <MudText><strong>Запчасти</strong></MudText>
-                        @if (UserService.CurrentUser.Role != Roles.Manager)
-                        {
-                             <MudFab  Class="me-4" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Size="Size.Small"></MudFab>
-                        } 
-                    </div>
-                </TitleContent>
-                <ChildContent>
-                    <MudTable Items="@_order.SpareParts" Hover="true" Breakpoint="Breakpoint.Sm">
-                        <HeaderContent>
-                            <MudTh><strong>Название</strong></MudTh>
-                            <MudTh><strong>Модель</strong></MudTh>
-                            <MudTh><strong>Цена</strong></MudTh>
-                            <MudTh><strong>Количество</strong></MudTh>
-                            @if (UserService.CurrentUser.Role != Roles.Manager)
-                            {
-                                <MudTh><strong>Удалить</strong></MudTh>
+                                 <MudFab Class="me-4" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Size="Size.Small"></MudFab>
                             } 
-                        </HeaderContent>
-                        <RowTemplate>
-                            <MudTd DataLabel="Название">@context.SparePart.Name</MudTd>
-                            <MudTd DataLabel="Модель">@context.SparePart.Model?.Name</MudTd>
-                            <MudTd DataLabel="Цена">@context.Price руб.</MudTd>
-                            <MudTd DataLabel="Количество">@context.Count</MudTd>
-                            @if (UserService.CurrentUser.Role != Roles.Manager)
-                            {
-                                <MudTd DataLabel="Удалить"><MudIconButton Icon="@Icons.Filled.Delete" Size="Size.Medium" Color="Color.Error"></MudIconButton></MudTd>
-                            }        
-                        </RowTemplate>
-                    </MudTable>
-                </ChildContent>  
-            </MudExpansionPanel>
-            <MudExpansionPanel>
-                <TitleContent>
-                    <div class="d-flex justify-content-between align-items-center">
-                        <MudText><strong>Ремонтные работы</strong></MudText>
-                        @if (UserService.CurrentUser.Role != Roles.Manager)
-                        {
-                             <MudFab Class="me-4" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Size="Size.Small"></MudFab>
-                        } 
-                    </div>
-                </TitleContent>
-                <ChildContent>
-                    <MudTable Items="@_order.CompletedWorks" Hover="true" Breakpoint="Breakpoint.Sm">
-                        <HeaderContent>
-                            <MudTh><strong>Описание</strong></MudTh>
-                            <MudTh><strong>Цена</strong></MudTh>
-                            <MudTh><strong>Количество</strong></MudTh>
-                            @if (UserService.CurrentUser.Role != Roles.Manager)
-                            {
-                                <MudTh><strong>Удалить</strong></MudTh>
-                            } 
-                        </HeaderContent>
-                        <RowTemplate>
-                            <MudTd DataLabel="Описание">@context.Repair?.Description</MudTd>
-                            <MudTd DataLabel="Цена">@context.Price руб.</MudTd>
-                            <MudTd Class="p-3" DataLabel="Количество">@context.Count</MudTd>
-                            @if (UserService.CurrentUser.Role != Roles.Manager)
-                            {
-                                 <MudTd DataLabel="Удалить"><MudIconButton Icon="@Icons.Filled.Delete" Size="Size.Medium" OnClick="@(() => DeleteRepair(context))" Color="Color.Error"></MudIconButton></MudTd>
-                            }            
-                        </RowTemplate>
-                    </MudTable>
-                </ChildContent>
-            </MudExpansionPanel>
-        </MudExpansionPanels>
+                        </div>
+                    </TitleContent>
+                    <ChildContent>
+                        <MudTable Items="@_order.CompletedWorks" Hover="true" Breakpoint="Breakpoint.Sm">
+                            <HeaderContent>
+                                <MudTh><strong>Описание</strong></MudTh>
+                                <MudTh><strong>Цена</strong></MudTh>
+                                <MudTh><strong>Количество</strong></MudTh>
+                                @if (UserService.CurrentUser.Role != Roles.Manager)
+                                {
+                                    <MudTh><strong>Удалить</strong></MudTh>
+                                } 
+                            </HeaderContent>
+                            <RowTemplate>
+                                <MudTd DataLabel="Описание">@context.Repair?.Description</MudTd>
+                                <MudTd DataLabel="Цена">@context.Price руб.</MudTd>
+                                <MudTd Class="p-3" DataLabel="Количество">@context.Count</MudTd>
+                                @if (UserService.CurrentUser.Role != Roles.Manager)
+                                {
+                                     <MudTd DataLabel="Удалить"><MudIconButton Icon="@Icons.Filled.Delete" Size="Size.Medium" OnClick="@(() => DeleteRepair(context))" Color="Color.Error"></MudIconButton></MudTd>
+                                }            
+                            </RowTemplate>
+                        </MudTable>
+                    </ChildContent>
+                </MudExpansionPanel>
+            </MudExpansionPanels>
+        }
     }
 </MudPaper>
 
@@ -263,5 +270,15 @@
     private void DeleteRepair(RepairListItem repair)
     {
         _order.CompletedWorks!.Remove(repair);
+    }
+
+    private void DeleteSparePart(SparePartListItem sparePart)
+    {
+        _order.SpareParts!.Remove(sparePart);
+    }
+
+    private void DeleteDefect(Defect defect)
+    {
+        _order.Defects!.Remove(defect);
     }
 }
