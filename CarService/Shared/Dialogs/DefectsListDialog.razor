@@ -1,0 +1,62 @@
+﻿@using CarService.Domain.Models
+@using CarService.Domain.Response
+@using CarService.Domain.Services.Interfaces
+
+@inject IDefectService DefectService
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <DialogContent>
+        <MudTable T="Defect" Class="mt-5" Items="@AllDefects" Filter="new Func<Defect,bool>(SearchTextFilter)" Hover="true" Breakpoint="Breakpoint.Sm" SelectedItemChanged="@SelectDefect">
+            <ToolBarContent>
+                <MudTextField T="string" Label="Поиск" @bind-Value="_searchText"></MudTextField>
+            </ToolBarContent>
+            <HeaderContent>
+                <MudTh>Описание</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Описание">@context.Description</MudTd>
+            </RowTemplate>
+        </MudTable>
+    </DialogContent>
+</MudDialog>
+
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    [Parameter] public List<Defect> CurrentDefects { get; set; } 
+
+    public List<Defect> AllDefects { get; set; } = null!;
+
+    private string _searchText = "";
+
+    private void Close() => MudDialog.Close();
+
+    protected async override Task OnInitializedAsync()
+    {
+        var res = await DefectService.GetAllDefectsAsync();
+
+        AllDefects = res.Data!;
+    }
+
+    private void SelectDefect(Defect defect)
+    {
+        if (CurrentDefects.FirstOrDefault(x => x.Id == defect.Id) is null)
+        {
+            CurrentDefects.Add(defect);
+        }
+
+        Close();
+    }
+
+    private bool SearchTextFilter(Defect defect) => FilterFunc(defect, _searchText);
+
+    private bool FilterFunc(Defect defect, string searchString)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+        if (defect.Description.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        return false;
+    }
+}

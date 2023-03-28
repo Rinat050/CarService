@@ -3,10 +3,12 @@
 @using CarService.Domain.Models
 @using CarService.Domain.Services.Interfaces
 @using CarService.Extensions
+@using CarService.Shared.Dialogs
 
 @inject IPurchaseOrderService OrderService
 @inject IUserService UserService
 @inject ISnackbar Snackbar
+@inject IDialogService DialogService
 
 <MudPaper Class="m-2 p-4" Elevation="3">
     @if (UserService.CurrentUser is null)
@@ -111,7 +113,7 @@
                             <MudText><strong>Неисправности</strong></MudText>
                             @if (UserService.CurrentUser.Role != Roles.Manager)
                             {
-                                 <MudFab  Class="me-4" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Size="Size.Small"></MudFab>
+                                 <MudFab  Class="me-4" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Size="Size.Small" OnClick="@(() => OpenDefectsDialog())"></MudFab>
                             }     
                         </div>
                     </TitleContent>
@@ -280,5 +282,17 @@
     private void DeleteDefect(Defect defect)
     {
         _order.Defects!.Remove(defect);
+    }
+
+    private async Task OpenDefectsDialog()
+    {
+        DialogOptions maxWidth = new DialogOptions() { MaxWidth = MaxWidth.Medium, FullWidth = true };
+        var parameters = new DialogParameters();
+
+        parameters.Add("CurrentDefects", _order.Defects);
+        var dialog = await DialogService.ShowAsync<DefectsListDialog>("Список неисправностей", parameters, options: maxWidth);
+        var result = await dialog.Result;
+
+        StateHasChanged();
     }
 }
