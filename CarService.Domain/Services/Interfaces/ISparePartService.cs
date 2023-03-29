@@ -13,6 +13,8 @@ namespace CarService.Domain.Services.Interfaces
 
         public Task<BaseResponse<List<SparePart>>> GetAllSparePartsAsync();
 
+        public Task<BaseResponse<List<SparePart>>> GetAvailableSparePartsAsync();
+
         public Task<BaseResponse<List<SparePart>>> GetSparePartsByModelAsync(Model model);
     }
 }

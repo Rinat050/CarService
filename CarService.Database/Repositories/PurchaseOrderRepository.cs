@@ -175,7 +175,7 @@ namespace CarService.Database.Repositories
                 repairRes = repairs.Sum(x => x.Count * x.Price);
             
             if (spareParts is not null)
-                sparePartsRes = repairs.Sum(x => x.Count * x.Price);
+                sparePartsRes = spareParts.Sum(x => x.Count * x.Price);
 
             return repairRes + sparePartsRes;
         }

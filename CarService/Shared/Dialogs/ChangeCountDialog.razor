@@ -1,0 +1,34 @@
+﻿@using CarService.Domain.Models
+@using CarService.Domain.Response
+@using CarService.Domain.Services.Interfaces
+
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <DialogContent>
+        <MudNumericField @bind-Value="CurrentCount" Variant="Variant.Outlined" Min="1" Max="MaxCount"></MudNumericField>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@Close">ОТМЕНА</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" ButtonType="ButtonType.Submit" OnClick="@(() => Save())">СОХРАНИТЬ</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+
+    [Parameter] public int CurrentCount { get; set; } 
+    [Parameter] public int MaxCount { get; set; }
+
+    private void Close() => MudDialog.Close();
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+    }
+
+    private async Task Save()
+    {
+        MudDialog.Close(DialogResult.Ok(CurrentCount));
+    }
+}

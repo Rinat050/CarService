@@ -231,12 +231,12 @@ namespace CarService.Domain.Services
                     return !_purchaseOrderRepository
                         .IsPurchaseOrderExistByStatusAndDiagnostician(Enums.OrderStatus.Created, user.Id);
                 case Enums.Roles.Mechanic:
-                    return !_purchaseOrderRepository
+                    return !(_purchaseOrderRepository
                         .IsPurchaseOrderExistByStatusAndMechanic(Enums.OrderStatus.Created, user.Id) ||
                         _purchaseOrderRepository
                         .IsPurchaseOrderExistByStatusAndMechanic(Enums.OrderStatus.Diagnosed, user.Id) ||
                         _purchaseOrderRepository
-                        .IsPurchaseOrderExistByStatusAndMechanic(Enums.OrderStatus.InWork, user.Id);
+                        .IsPurchaseOrderExistByStatusAndMechanic(Enums.OrderStatus.InWork, user.Id));
                 default:
                     return false;
             }

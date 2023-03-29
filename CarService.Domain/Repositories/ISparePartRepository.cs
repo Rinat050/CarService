@@ -8,6 +8,8 @@ namespace CarService.Domain.Repositories
 
         public Task<List<SparePart>> GetAllSparePartsAsync();
 
+        public Task<List<SparePart>> GetAvailableSparePartsAsync();
+
         public Task<SparePart> GetSparePartByNumberAsync(string number);
 
         public Task<SparePart> GetSparePartByIdAsync(string id);

@@ -49,6 +49,24 @@ namespace CarService.Database.Repositories
                 }).ToList<SparePart>();
         }
 
+        public async Task<List<SparePart>> GetAvailableSparePartsAsync()
+        {
+            var spareParts = await _spareParts
+               .FindAsync<SparePartDb>(x => x.Count > 0);
+
+            return spareParts
+                .ToEnumerable()
+                .Select(x => new SparePart()
+                {
+                    Id = x.Id.ToString(),
+                    Name = x.Name,
+                    Price = x.Price,
+                    Count = x.Count,
+                    Model = _models.GetModelById(x.ModelId),
+                    Number = x.Number,
+                }).ToList<SparePart>();
+        }
+
         public SparePart GetSparePartById(string id)
         {
             var filter = Builders<SparePartDb>.Filter.Eq("_id", new ObjectId(id));

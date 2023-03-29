@@ -6,6 +6,7 @@
 @using CarService.Shared.Dialogs
 
 @inject IPurchaseOrderService OrderService
+@inject NavigationManager NavManager
 @inject IUserService UserService
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
@@ -31,7 +32,7 @@
                 <MudItem><MudText Typo="Typo.h6" Class="fw-bold" Color="Color.Primary">ЗАКАЗ-НАРЯД</MudText></MudItem>
                 <MudSpacer/>
                 <MudItem>
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary">
+                    <MudButton Variant="Variant.Filled" OnClick="@(() => SaveChanges())" Color="Color.Primary">
                         <MudText Typo="Typo.button" Class="fw-bold">СОХРАНИТЬ</MudText>
                     </MudButton>
                 </MudItem>
@@ -40,22 +41,29 @@
             <MudGrid Spacing="5" Class="align-items-center" Justify="Justify.FlexStart">
                 <MudItem><MudText Class="fs-6" Color="Color.Default">Дата создания: @(_order.CreatedDate)</MudText></MudItem>
                 <MudItem>
-                    <MudSelect @bind-Value="_order.Status" Label="Статус" ToStringFunc="_statusConverter" AnchorOrigin="Origin.BottomCenter">
-                        @if(UserService.CurrentUser.Role == Roles.Manager)
-                        {
-                            <MudSelectItem Value="OrderStatus.Completed"></MudSelectItem>
-                            <MudSelectItem Value="OrderStatus.RegectedByClient"></MudSelectItem>
-                        }
-                        else if(UserService.CurrentUser.Role == Roles.Diagnostician)
-                        {
-                            <MudSelectItem Value="OrderStatus.Diagnosed"></MudSelectItem>
-                        }
-                        else if(UserService.CurrentUser.Role == Roles.Mechanic)
-                        {
-                            <MudSelectItem Value="OrderStatus.InWork"></MudSelectItem>
-                            <MudSelectItem Value="OrderStatus.ClosedByWork"></MudSelectItem>
-                        }
-                </MudSelect>
+                    @if (_order.Status is OrderStatus.Completed || _order.Status is OrderStatus.RegectedByClient)
+                    {
+                        <MudText Class="fs-6" Color="Color.Default">Статус: @(_order.Status.GetDisplayName())</MudText>
+                    }
+                    else
+                    {
+                        <MudSelect @bind-Value="_order.Status" Label="Статус" ToStringFunc="_statusConverter" AnchorOrigin="Origin.BottomCenter">
+                            @if(UserService.CurrentUser.Role == Roles.Manager)
+                            {
+                                <MudSelectItem Value="OrderStatus.Completed"></MudSelectItem>
+                                <MudSelectItem Value="OrderStatus.RegectedByClient"></MudSelectItem>
+                            }
+                            else if(UserService.CurrentUser.Role == Roles.Diagnostician)
+                            {
+                                <MudSelectItem Value="OrderStatus.Diagnosed"></MudSelectItem>
+                            }
+                            else if(UserService.CurrentUser.Role == Roles.Mechanic)
+                            {
+                                <MudSelectItem Value="OrderStatus.InWork"></MudSelectItem>
+                                <MudSelectItem Value="OrderStatus.ClosedByWork"></MudSelectItem>
+                            }
+                        </MudSelect>    
+                    }
                 </MudItem>
             </MudGrid>  
 
@@ -111,7 +119,10 @@
                     <TitleContent>
                         <div class="d-flex justify-content-between align-items-center">
                             <MudText><strong>Неисправности</strong></MudText>
-                            @if (UserService.CurrentUser.Role != Roles.Manager)
+                            @if (UserService.CurrentUser.Role != Roles.Manager && 
+                                !(_order.Status is OrderStatus.Completed) && 
+                                !(_order.Status is OrderStatus.RegectedByClient) && 
+                                !(_order.Status is OrderStatus.ClosedByWork))
                             {
                                  <MudFab  Class="me-4" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Size="Size.Small" OnClick="@(() => OpenDefectsDialog())"></MudFab>
                             }     
@@ -121,14 +132,20 @@
                         <MudTable Items="@_order.Defects" Hover="true" Breakpoint="Breakpoint.Sm">
                             <HeaderContent>
                                 <MudTh><strong>Название</strong></MudTh>
-                                @if (UserService.CurrentUser.Role != Roles.Manager)
+                                @if (UserService.CurrentUser.Role != Roles.Manager && 
+                                !(_order.Status is OrderStatus.Completed) && 
+                                !(_order.Status is OrderStatus.RegectedByClient) && 
+                                !(_order.Status is OrderStatus.ClosedByWork))
                                 {
                                     <MudTh><strong>Удалить</strong></MudTh>
                                 } 
                             </HeaderContent>
                             <RowTemplate>
                                 <MudTd DataLabel="Название">@context.Description</MudTd>
-                                @if (UserService.CurrentUser.Role != Roles.Manager)
+                                @if (UserService.CurrentUser.Role != Roles.Manager && 
+                                !(_order.Status is OrderStatus.Completed) && 
+                                !(_order.Status is OrderStatus.RegectedByClient) && 
+                                !(_order.Status is OrderStatus.ClosedByWork))
                                 {
                                     <MudTd DataLabel="Удалить"><MudIconButton Icon="@Icons.Filled.Delete" Size="Size.Medium" Color="Color.Error" OnClick="@(() => DeleteDefect(context))"></MudIconButton></MudTd>
                                 }    
@@ -140,20 +157,26 @@
                     <TitleContent>
                         <div class="d-flex justify-content-between align-items-center">
                             <MudText><strong>Запчасти</strong></MudText>
-                            @if (UserService.CurrentUser.Role != Roles.Manager)
+                            @if (UserService.CurrentUser.Role != Roles.Manager && 
+                                !(_order.Status is OrderStatus.Completed) && 
+                                !(_order.Status is OrderStatus.RegectedByClient) && 
+                                !(_order.Status is OrderStatus.ClosedByWork))
                             {
                                  <MudFab  Class="me-4" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Size="Size.Small" OnClick="@(() => OpenSparePartsDialog())"></MudFab>
                             } 
                         </div>
                     </TitleContent>
                     <ChildContent>
-                        <MudTable Items="@_order.SpareParts" Hover="true" Breakpoint="Breakpoint.Sm">
+                        <MudTable Items="@_sparePartsList" T="SparePartListItem" Hover="true" Breakpoint="Breakpoint.Sm" OnRowClick="ChangeSparePartCount">
                             <HeaderContent>
                                 <MudTh><strong>Название</strong></MudTh>
                                 <MudTh><strong>Модель</strong></MudTh>
                                 <MudTh><strong>Цена</strong></MudTh>
                                 <MudTh><strong>Количество</strong></MudTh>
-                                @if (UserService.CurrentUser.Role != Roles.Manager)
+                                @if (UserService.CurrentUser.Role != Roles.Manager && 
+                                !(_order.Status is OrderStatus.Completed) && 
+                                !(_order.Status is OrderStatus.RegectedByClient) && 
+                                !(_order.Status is OrderStatus.ClosedByWork))
                                 {
                                     <MudTh><strong>Удалить</strong></MudTh>
                                 } 
@@ -163,7 +186,10 @@
                                 <MudTd DataLabel="Модель">@(context.SparePart.Model?.Brand.Name + " " + context.SparePart.Model?.Name)</MudTd>
                                 <MudTd DataLabel="Цена">@context.Price руб.</MudTd>
                                 <MudTd DataLabel="Количество">@context.Count</MudTd>
-                                @if (UserService.CurrentUser.Role != Roles.Manager)
+                                @if (UserService.CurrentUser.Role != Roles.Manager && 
+                                !(_order.Status is OrderStatus.Completed) && 
+                                !(_order.Status is OrderStatus.RegectedByClient) && 
+                                !(_order.Status is OrderStatus.ClosedByWork))
                                 {
                                     <MudTd DataLabel="Удалить"><MudIconButton Icon="@Icons.Filled.Delete" Size="Size.Medium" Color="Color.Error" OnClick="@(() => DeleteSparePart(context))"></MudIconButton></MudTd>
                                 }        
@@ -175,19 +201,25 @@
                     <TitleContent>
                         <div class="d-flex justify-content-between align-items-center">
                             <MudText><strong>Ремонтные работы</strong></MudText>
-                            @if (UserService.CurrentUser.Role != Roles.Manager)
+                            @if (UserService.CurrentUser.Role != Roles.Manager && 
+                                !(_order.Status is OrderStatus.Completed) && 
+                                !(_order.Status is OrderStatus.RegectedByClient) && 
+                                !(_order.Status is OrderStatus.ClosedByWork))
                             {
                                  <MudFab Class="me-4" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Size="Size.Small" OnClick="@(() => OpenRepairsDialog())"></MudFab>
                             } 
                         </div>
                     </TitleContent>
                     <ChildContent>
-                        <MudTable Items="@_order.CompletedWorks" Hover="true" Breakpoint="Breakpoint.Sm">
+                        <MudTable Items="@_order.CompletedWorks" T="RepairListItem" OnRowClick="ChangeWorkCount" Hover="true" Breakpoint="Breakpoint.Sm">
                             <HeaderContent>
                                 <MudTh><strong>Описание</strong></MudTh>
                                 <MudTh><strong>Цена</strong></MudTh>
                                 <MudTh><strong>Количество</strong></MudTh>
-                                @if (UserService.CurrentUser.Role != Roles.Manager)
+                                @if (UserService.CurrentUser.Role != Roles.Manager && 
+                                !(_order.Status is OrderStatus.Completed) && 
+                                !(_order.Status is OrderStatus.RegectedByClient) && 
+                                !(_order.Status is OrderStatus.ClosedByWork))
                                 {
                                     <MudTh><strong>Удалить</strong></MudTh>
                                 } 
@@ -196,7 +228,10 @@
                                 <MudTd DataLabel="Описание">@context.Repair?.Description</MudTd>
                                 <MudTd DataLabel="Цена">@context.Price руб.</MudTd>
                                 <MudTd Class="p-3" DataLabel="Количество">@context.Count</MudTd>
-                                @if (UserService.CurrentUser.Role != Roles.Manager)
+                                @if (UserService.CurrentUser.Role != Roles.Manager && 
+                                !(_order.Status is OrderStatus.Completed) && 
+                                !(_order.Status is OrderStatus.RegectedByClient) && 
+                                !(_order.Status is OrderStatus.ClosedByWork))
                                 {
                                      <MudTd DataLabel="Удалить"><MudIconButton Icon="@Icons.Filled.Delete" Size="Size.Medium" OnClick="@(() => DeleteRepair(context))" Color="Color.Error"></MudIconButton></MudTd>
                                 }            
@@ -216,6 +251,7 @@
     private List<User> _availableMechanics = new();
     private bool _loading = true;
     private int _totalPrice => GetTotalPrice();
+    private List<SparePartListItem> _sparePartsList = new();
 
     readonly Func<User, string?> _userConverter = p => ($"{p?.Surname} {p?.Name} {p?.Patronymic}");
     readonly Func<OrderStatus, string?> _statusConverter = p => p.GetDisplayName();
@@ -231,17 +267,15 @@
                 _order = res.Data!;
 
                 if (_order.CompletedWorks == null)
-                    _order.CompletedWorks = new()
-                    {
-                        new RepairListItem() {Repair = new Repair() {Description = "Замена двигателя"}, Count = 2, Price = 3000},
-                        new RepairListItem() {Repair = new Repair() {Description = "Замена двигателя"}, Count = 1, Price = 3000}
-                    };
+                    _order.CompletedWorks = new();
 
                 if (_order.Defects == null)
                     _order.Defects = new();
 
                 if (_order.SpareParts == null)
                     _order.SpareParts = new();
+
+                _sparePartsList = new List<SparePartListItem>(_order.SpareParts);
             }
 
             _loading = false;
@@ -264,7 +298,7 @@
     private int GetTotalPrice()
     {
         int repairTotal = _order.CompletedWorks!.Sum(x => x.Count * x.Price);
-        int sparePartsTotal = _order.SpareParts!.Sum(x => x.Count * x.Price);
+        int sparePartsTotal = _sparePartsList!.Sum(x => x.Count * x.Price);
 
         return repairTotal + sparePartsTotal;
     }
@@ -276,7 +310,7 @@
 
     private void DeleteSparePart(SparePartListItem sparePart)
     {
-        _order.SpareParts!.Remove(sparePart);
+        _sparePartsList!.Remove(sparePart);
     }
 
     private void DeleteDefect(Defect defect)
@@ -301,7 +335,7 @@
         DialogOptions maxWidth = new DialogOptions() { MaxWidth = MaxWidth.Medium, FullWidth = true };
         var parameters = new DialogParameters();
 
-        parameters.Add("CurrentSpareParts", _order.SpareParts);
+        parameters.Add("CurrentSpareParts", _sparePartsList);
         parameters.Add("CarModel", _order.Car.Model);
         var dialog = await DialogService.ShowAsync<SparePartsListDialog>("Список запчастей", parameters, options: maxWidth);
         var result = await dialog.Result;
@@ -309,7 +343,7 @@
         StateHasChanged();
     }
 
-     private async Task OpenRepairsDialog()
+    private async Task OpenRepairsDialog()
     {
         DialogOptions maxWidth = new DialogOptions() { MaxWidth = MaxWidth.Medium, FullWidth = true };
         var parameters = new DialogParameters();
@@ -317,6 +351,86 @@
         parameters.Add("CurrentWorks", _order.CompletedWorks);
         var dialog = await DialogService.ShowAsync<RepairsListDialog>("Список ремонтных работ", parameters, options: maxWidth);
         var result = await dialog.Result;
+
+        StateHasChanged();
+    }
+
+    private async Task SaveChanges()
+    {
+        _order.SpareParts = new List<SparePartListItem>(_sparePartsList);
+
+        var res = await OrderService.UpdatePurchaseOrderAsync(_order);
+
+        if (res.Success)
+        {
+            Snackbar.Add(res.Description, Severity.Success);
+            NavManager.NavigateTo("/purchaseOrders");
+        }
+        else
+        {
+            Snackbar.Add(res.Description, Severity.Error);
+        }
+    }
+
+    private async void ChangeSparePartCount(TableRowClickEventArgs<SparePartListItem> args)
+    {
+        if (UserService.CurrentUser.Role is Roles.Manager
+            || _order.Status is OrderStatus.Completed
+            || _order.Status is OrderStatus.RegectedByClient)
+        {
+            return;
+        }
+
+        var parameters = new DialogParameters();
+
+        parameters.Add("CurrentCount", args.Item.Count);
+
+        if (_order.SpareParts!.FirstOrDefault(x => x.SparePart.Id == args.Item.SparePart.Id) is not null)
+        {
+            parameters.Add("MaxCount", args.Item.SparePart.Count + args.Item.Count);
+        }
+        else
+        {
+            parameters.Add("MaxCount", args.Item.SparePart.Count);
+        }
+
+        var dialog = await DialogService.ShowAsync<ChangeCountDialog>("Количество запчасти", parameters);
+        var result = await dialog.Result;
+
+        if (result.Data is null)
+        {
+            return;
+        }
+
+        args.Item.Count = (int) result.Data;
+
+        StateHasChanged();
+    }
+
+    private async void ChangeWorkCount(TableRowClickEventArgs<RepairListItem> args)
+    {
+        if (UserService.CurrentUser.Role is Roles.Manager
+            || _order.Status is OrderStatus.Completed
+            || _order.Status is OrderStatus.RegectedByClient)
+        {
+            return;
+        }
+
+        var parameters = new DialogParameters();
+
+        parameters.Add("CurrentCount", args.Item.Count);
+
+        parameters.Add("MaxCount", 5);
+
+        var dialog = await DialogService.ShowAsync<ChangeCountDialog>("Количество выполненной работы", parameters);
+        var result = await dialog.Result;
+
+        if (result.Data is null)
+        {
+            return;
+        }
+
+        args.Item.Count = (int) result.Data;
 
         StateHasChanged();
     }

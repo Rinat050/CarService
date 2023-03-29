@@ -195,10 +195,13 @@ namespace CarService.Domain.Services
 
         private async Task<bool> ChangeSparePartsCountAsync(List<SparePartListItem> oldSparePartsList, List<SparePartListItem> newSparePartsList)
         {
-            foreach(var part in oldSparePartsList)
+            if (oldSparePartsList != null)
             {
-                var res = await _sparePartService.ChangeSparePartCountAsync(part.SparePart.Id, part.Count);
-                if (!res.Success) return false;
+                foreach (var part in oldSparePartsList)
+                {
+                    var res = await _sparePartService.ChangeSparePartCountAsync(part.SparePart.Id, part.Count);
+                    if (!res.Success) return false;
+                }
             }
 
             foreach(var part in newSparePartsList)

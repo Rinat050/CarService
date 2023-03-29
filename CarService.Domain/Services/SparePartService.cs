@@ -175,5 +175,27 @@ namespace CarService.Domain.Services
                 };
             }
         }
+
+        public async Task<BaseResponse<List<SparePart>>> GetAvailableSparePartsAsync()
+        {
+            try
+            {
+                var spareParts = await _sparePartRepository.GetAvailableSparePartsAsync();
+
+                return new BaseResponse<List<SparePart>>()
+                {
+                    Success = true,
+                    Data = spareParts
+                };
+            }
+            catch
+            {
+                return new BaseResponse<List<SparePart>>()
+                {
+                    Success = false,
+                    Description = "Внутренняя ошибка!"
+                };
+            }
+        }
     }
 }
