@@ -97,6 +97,8 @@
 
     protected override async Task OnInitializedAsync()
     {
+        if (UserService.CurrentUser != null) return;
+
         var authUser = await LocalStorage.GetItemAsync<User>("AuthUser");
 
         if (authUser is not null)

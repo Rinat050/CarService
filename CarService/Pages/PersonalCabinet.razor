@@ -22,7 +22,7 @@
         <MudText Typo="Typo.h6" Color="Color.Primary" Class="fw-bold">ЛИЧНЫЙ КАБИНЕТ</MudText>
         <EditForm Model="@_currentUser" OnValidSubmit="SaveChanges">
             <DataAnnotationsValidator/>
-            <MudGrid Spacing="2" Class="d-xxl-grid">
+            <MudGrid Spacing="2">
                 <MudItem xs="10">
                     <MudTextField T="string" Label="Фамилия" 
                         @bind-Value="_currentUser.Surname" For="@(() => _currentUser.Surname)"></MudTextField>

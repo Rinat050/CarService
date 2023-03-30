@@ -164,7 +164,7 @@ namespace CarService.Domain.Services
                     };
                 }
 
-                var res = await ChangeSparePartsCountAsync(orderDb.SpareParts, order.SpareParts);
+                var res = await ChangeSparePartsCountAsync(orderDb, order);
 
                 if (!res)
                 {
@@ -193,23 +193,33 @@ namespace CarService.Domain.Services
             }
         }
 
-        private async Task<bool> ChangeSparePartsCountAsync(List<SparePartListItem> oldSparePartsList, List<SparePartListItem> newSparePartsList)
+        private async Task<bool> ChangeSparePartsCountAsync(PurchaseOrder oldOrder, PurchaseOrder newOrder)
         {
-            if (oldSparePartsList != null)
+            if (oldOrder.SpareParts != null)
             {
-                foreach (var part in oldSparePartsList)
+                if (oldOrder.Status is not Enums.OrderStatus.RegectedByClient)
                 {
-                    var res = await _sparePartService.ChangeSparePartCountAsync(part.SparePart.Id, part.Count);
-                    if (!res.Success) return false;
+                    foreach (var part in oldOrder.SpareParts)
+                    {
+                        var res = await _sparePartService.ChangeSparePartCountAsync(part.SparePart.Id, part.Count);
+                        if (!res.Success) return false;
+                    }
+                }      
+            }
+            
+
+            if (newOrder.SpareParts != null)
+            {
+                if (newOrder.Status is not Enums.OrderStatus.RegectedByClient)
+                {
+                    foreach (var part in newOrder.SpareParts)
+                    {
+                        var res = await _sparePartService.ChangeSparePartCountAsync(part.SparePart.Id, -1 * part.Count);
+                        if (!res.Success) return false;
+                    }
                 }
             }
-
-            foreach(var part in newSparePartsList)
-            {
-                var res = await _sparePartService.ChangeSparePartCountAsync(part.SparePart.Id, -1 * part.Count);
-                if (!res.Success) return false;
-            }
-
+            
             return true;
         }
     }

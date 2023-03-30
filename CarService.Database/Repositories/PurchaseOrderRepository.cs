@@ -234,7 +234,8 @@ namespace CarService.Database.Repositories
         public async Task<List<PurchaseOrderTableItem>> GetPurchaseOrdersByMechanicIdAsync(string mechanicId)
         {
             var purchaseOrders = await _purchaseOrders
-               .FindAsync<PurchaseOrderDb>(x => x.MechanicId == mechanicId);
+               .FindAsync<PurchaseOrderDb>(x => x.MechanicId == mechanicId 
+               && x.Status != (int) OrderStatus.Created);
 
             return purchaseOrders
                 .ToEnumerable()

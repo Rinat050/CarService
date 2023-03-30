@@ -18,46 +18,60 @@
     }
     else
     {
-        <MudGrid>
-            <MudItem><MudText Typo="Typo.h6" Class="fw-bold" Color="Color.Primary">ЗАКАЗЫ-НАРЯДЫ</MudText></MudItem>
-            <MudSpacer/>
-            @if (UserService.CurrentUser.Role == Roles.Manager)
-            {
-                 <MudItem>
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@OpenCreateOrderlDialog">
-                        <MudText Typo="Typo.button" Class="fw-bold">НОВЫЙ ЗАКАЗ</MudText>
-                    </MudButton>
-                </MudItem>
-            }
-        </MudGrid>  
+        @if (_loading)
+        {
+            <MudProgressCircular Color="Color.Primary" Size="Size.Medium" Indeterminate="true"></MudProgressCircular>
+        }
+        else
+        {
+            <MudGrid>
+                <MudItem><MudText Typo="Typo.h6" Class="fw-bold" Color="Color.Primary">ЗАКАЗЫ-НАРЯДЫ</MudText></MudItem>
+                <MudSpacer/>
+                @if (UserService.CurrentUser.Role == Roles.Manager)
+                {
+                     <MudItem>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@OpenCreateOrderlDialog">
+                            <MudText Typo="Typo.button" Class="fw-bold">НОВЫЙ ЗАКАЗ</MudText>
+                        </MudButton>
+                    </MudItem>
+                }
+            </MudGrid>  
 
-        <MudTable Class="mt-5" Items="@_orders" Hover="true" Breakpoint="Breakpoint.Sm">
-            <HeaderContent>
-                <MudTh>Дата создания</MudTh>
-                <MudTh>Клиент</MudTh>
-                <MudTh>Автомобиль</MudTh>
-                <MudTh>Итоговая стоимость</MudTh>
-                <MudTh>Статус</MudTh>
-                <MudTh>Изменение</MudTh>
-            </HeaderContent>
-            <RowTemplate>
-                <MudTd DataLabel="Дата создания">@(context.CreatedDate.ToString("D"))</MudTd>
-                <MudTd DataLabel="Клиент">@context.Client</MudTd>
-                <MudTd DataLabel="Автомобиль">@(context.Car)</MudTd>
-                <MudTd DataLabel="Итоговая стоимость">@context.TotalCost руб.</MudTd>
-                <MudTd DataLabel="Статус">@context.Status.GetDisplayName()</MudTd>
-                <MudTd DataLabel="Изменение"><MudIconButton Icon="@Icons.Filled.Edit" Size="Size.Medium" OnClick="@(() => OpenEditOrderDialog(context.PurchaseOrderId))"></MudIconButton></MudTd>
-            </RowTemplate>
-        </MudTable>
+            <MudTable Class="mt-5" Items="@_orders" Hover="true" Breakpoint="Breakpoint.Sm">
+                <HeaderContent>
+                    <MudTh><MudTableSortLabel SortBy="new Func<PurchaseOrderTableItem, object>(x=>x.CreatedDate)">Дата создания</MudTableSortLabel></MudTh>
+                    <MudTh><MudTableSortLabel SortBy="new Func<PurchaseOrderTableItem, object>(x=>x.Client)">Клиент</MudTableSortLabel></MudTh>
+                    <MudTh><MudTableSortLabel SortBy="new Func<PurchaseOrderTableItem, object>(x=>x.Car)">Автомобиль</MudTableSortLabel></MudTh>
+                    <MudTh><MudTableSortLabel SortBy="new Func<PurchaseOrderTableItem, object>(x=>x.TotalCost)">Итоговая стоимость</MudTableSortLabel></MudTh>
+                    <MudTh><MudTableSortLabel SortBy="new Func<PurchaseOrderTableItem, object>(x=>x.Status)">Статус</MudTableSortLabel></MudTh>
+                    <MudTh>Изменение</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Дата создания">@(context.CreatedDate.ToString("D"))</MudTd>
+                    <MudTd DataLabel="Клиент">@context.Client</MudTd>
+                    <MudTd DataLabel="Автомобиль">@(context.Car)</MudTd>
+                    <MudTd DataLabel="Итоговая стоимость">@context.TotalCost руб.</MudTd>
+                    <MudTd DataLabel="Статус">@context.Status.GetDisplayName()</MudTd>
+                    <MudTd DataLabel="Изменение"><MudIconButton Icon="@Icons.Filled.Edit" Size="Size.Medium" OnClick="@(() => OpenEditOrderDialog(context.PurchaseOrderId))"></MudIconButton></MudTd>
+                </RowTemplate>
+                <PagerContent>
+                    <MudTablePager HorizontalAlignment="HorizontalAlignment.Center" PageSizeOptions="new int[]{10, 25, 50, 100}" HidePagination="true" InfoFormat="{first_item}-{last_item} из {all_items}" RowsPerPageString="Отображать строк:"/>
+                </PagerContent>
+            </MudTable>
+        }     
     }
 </MudPaper>
 
 @code {
     private List<PurchaseOrderTableItem>? _orders;
+    private bool _loading = true;
 
     protected async override Task OnInitializedAsync()
     {
-        await FillList();
+        if (UserService.CurrentUser != null)
+        {
+             await FillList();
+        }
     }
 
     private async Task FillList()
@@ -78,6 +92,8 @@
         }
 
         _orders = res.Data!;
+
+        _loading = false;
     }
 
     private async Task OpenCreateOrderlDialog()
