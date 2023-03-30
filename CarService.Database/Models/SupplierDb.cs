@@ -11,5 +11,6 @@ namespace CarService.Database.Models
         public string? Name { get; set; }
         public string? Inn { get; set; }
         public string? PhoneNumber { get; set; }
+        public List<SupplierSparePartItemDb>? SpareParts { get; set; }
     }
 }
