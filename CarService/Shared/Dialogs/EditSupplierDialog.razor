@@ -1,0 +1,176 @@
+﻿@using CarService.Domain.Enums
+@using CarService.Domain.Models
+@using CarService.Domain.Response
+@using CarService.Domain.Services.Interfaces
+
+@inject ISupplierService SupplierService
+@inject ISparePartService SparePartService
+@inject IUserService UserService
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+<EditForm Model="_supplier" OnValidSubmit="@EditSupplier">
+    <DataAnnotationsValidator/>
+    <MudDialog>
+        <DialogContent>
+            <MudGrid Spacing="2">
+                <MudItem xs="12">
+                    <MudTextField T="string" Label="Наименование" 
+                        @bind-Value="_supplier.Name" For="@(() => _supplier.Name)"></MudTextField>
+                </MudItem>
+                <MudItem xs="6">
+                    <MudTextField T="string" Label="ИНН"  
+                        @bind-Value="_supplier.Inn" For="@(() => _supplier.Inn)"></MudTextField>
+                </MudItem>
+                <MudItem xs="6">
+                    <MudTextField T="string" Label="Телефон"
+                        @bind-Value="_supplier.PhoneNumber" For="@(() => _supplier.PhoneNumber)"></MudTextField>
+                </MudItem>
+            </MudGrid>
+            <MudTable T="SupplierSparePartItem" Class="mt-5" Items="@_supplier.SpareParts" Filter="new Func<SupplierSparePartItem,bool>(SearchTextFilter)" Hover="true" Breakpoint="Breakpoint.Sm">
+                <ToolBarContent>
+                    <MudGrid Class="align-items-center" >
+                        <MudItem><MudText><strong>Список поставляемых запчастей</strong></MudText></MudItem>
+                        <MudSpacer/>
+                        <MudItem><MudFab Class="me-4" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Size="Size.Small" OnClick="@(() => OpenAddSparePartDialog())"></MudFab> </MudItem>   
+                    </MudGrid>
+                </ToolBarContent>
+                <ColGroup>
+                    <col style="width: 30%;"/>
+                    <col style="width: 30%;"/>
+                    <col style="width: 35%;" />
+                    <col style="width: 70px;" />
+                </ColGroup>
+                <HeaderContent>
+                    <MudTh>Название</MudTh>
+                    <MudTh>Модель</MudTh>
+                    <MudTh>Закупочная цена</MudTh>
+                    <MudTh>Удаление</MudTh>
+                </HeaderContent>
+                <RowTemplate Context="tableContext">
+                    <MudTd DataLabel="Название">@tableContext.SparePart.Name</MudTd>
+                    <MudTd DataLabel="Модель">@(tableContext.SparePart.Model.Brand.Name + " " + tableContext.SparePart.Model.Name)</MudTd>
+                    <MudTd DataLabel="Закупочная цена" Style="text-align:right">
+                        <MudGrid Spacing="2" Class="align-items-center">
+                            <MudItem xs="5">
+                                <MudNumericField T="int" HideSpinButtons="true" Min="0" Max="3000000" @bind-Value="@tableContext.Cost" Variant="Variant.Outlined"></MudNumericField>
+                            </MudItem> 
+                            <MudItem>
+                                <MudText>руб.</MudText>
+                            </MudItem>
+                        </MudGrid>
+                    </MudTd>
+                    <MudTd DataLabel="Удаление"><MudIconButton Icon="@Icons.Filled.Delete" Size="Size.Medium" Color="Color.Error" OnClick="@(() => DeleteSparePart(tableContext))"></MudIconButton></MudTd>
+                </RowTemplate>
+            </MudTable>
+        </DialogContent>
+        <DialogActions>
+            <MudButton OnClick="@Close">ОТМЕНА</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" ButtonType="ButtonType.Submit">СОХРАНИТЬ</MudButton>
+        </DialogActions>
+    </MudDialog>
+</EditForm>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+
+    [Parameter] public string SupplierId { get; set; } = "";
+    [Parameter] public bool IsNew { get; set; }
+
+    private Supplier _supplier;
+    private string _searchText = "";
+
+    private void Close() => MudDialog.Close();
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+
+        if (IsNew)
+        {
+            _supplier = new Supplier();
+            _supplier.SpareParts = new();
+            return;
+        }
+
+        if (_supplier is null)
+        {
+            _supplier = new Supplier();
+        }
+    }
+
+    protected async override Task OnInitializedAsync()
+    {
+        if (IsNew) return;
+
+        var supplierResult = await SupplierService.GetSupplierByIdAsync(SupplierId);
+
+        if (supplierResult.Success)
+        {
+            _supplier = supplierResult.Data!;
+
+            if (_supplier.SpareParts is null)
+            {
+                _supplier.SpareParts = new();
+            }
+        };
+    }
+
+    private async Task EditSupplier()
+    {
+        BaseResponse<Supplier> result;
+
+        if (IsNew)
+        {
+            result = await SupplierService.CreateSupplierAsync(_supplier);
+        }
+        else
+        {
+            result = await SupplierService.UpdateSupplierAsync(_supplier);
+        }
+
+        if (result.Success)
+        {
+            Snackbar.Add(result.Description, Severity.Success);
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+        else
+        {
+            Snackbar.Add(result.Description, Severity.Error);
+        }
+    }
+
+    private async Task OpenAddSparePartDialog()
+    {
+        DialogOptions maxWidth = new DialogOptions() { MaxWidth = MaxWidth.Medium, FullWidth = true };
+        var parameters = new DialogParameters();
+
+        parameters.Add("CurrentSpareParts", _supplier.SpareParts);
+        var dialog = await DialogService.ShowAsync<AddSupplierSparePartDialog>("Список запчастей", parameters, options: maxWidth);
+        var result = await dialog.Result;
+
+        StateHasChanged();
+    }
+
+    private void DeleteSparePart(SupplierSparePartItem sparePart)
+    {
+        _supplier.SpareParts!.Remove(sparePart);
+    }
+
+    private bool SearchTextFilter(SupplierSparePartItem sparePart) => FilterFunc(sparePart, _searchText);
+
+    private bool FilterFunc(SupplierSparePartItem sparePart, string searchString)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+        if (sparePart.SparePart.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (sparePart.SparePart.Model.Brand.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (sparePart.SparePart.Model.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if ($"{sparePart.SparePart.Model.Brand.Name} {sparePart.SparePart.Model.Name}".Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        return false;
+    }
+}

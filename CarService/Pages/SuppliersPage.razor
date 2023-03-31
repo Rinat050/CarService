@@ -1,0 +1,98 @@
+﻿@page "/suppliers"
+@using CarService.Domain.Enums
+@using CarService.Domain.Models
+@using CarService.Domain.Response
+@using CarService.Domain.Services.Interfaces
+@using CarService.Extensions
+@using CarService.Shared.Dialogs
+
+@inject ISupplierService SupplierService
+@inject IUserService UserService
+@inject IDialogService DialogService
+
+<MudPaper Class="m-2 p-3" Elevation="3">
+    @if (UserService.CurrentUser is null)
+    {
+        <MudAlert Variant="Variant.Outlined" ContentAlignment="HorizontalAlignment.Center" Severity="Severity.Warning">Необходимо авторизоваться!</MudAlert>
+    }
+    else if(UserService.CurrentUser.Role is Domain.Enums.Roles.Admin || UserService.CurrentUser.Role is Domain.Enums.Roles.Manager){
+        <MudGrid>
+            <MudItem><MudText Typo="Typo.h6" Class="fw-bold" Color="Color.Primary">ПОСТАВЩИКИ</MudText></MudItem>
+            <MudSpacer/>
+            <MudItem>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@OpenCreateSupplierDialog">
+                    <MudText Typo="Typo.button" Class="fw-bold">ДОБАВИТЬ</MudText>
+                </MudButton>
+            </MudItem>
+        </MudGrid>  
+
+        <MudTable Class="mt-5" Items="@_suppliers" Hover="true" Breakpoint="Breakpoint.Sm">
+            <HeaderContent>
+                <MudTh>Наименование</MudTh>
+                <MudTh>ИНН</MudTh>
+                <MudTh>Телефон</MudTh>
+                <MudTh>Изменение</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Наименование">@context.Name</MudTd>
+                <MudTd DataLabel="ИНН">@context.Inn</MudTd>
+                <MudTd DataLabel="Телефон">@context.PhoneNumber</MudTd>
+                @{
+                    var supplier = (SupplierTableItem) context;
+                }
+                <MudTd DataLabel="Изменение"><MudIconButton Icon="@Icons.Filled.Edit" Size="Size.Medium" OnClick="@(() => OpenEditSupplierDialog(supplier))"></MudIconButton></MudTd>
+            </RowTemplate>
+    </MudTable>
+    }
+    else
+    {
+        <MudAlert Variant="Variant.Outlined" ContentAlignment="HorizontalAlignment.Center" Severity="Severity.Warning">Недостаточно прав!</MudAlert>
+    }
+</MudPaper>
+
+@code {
+    private List<SupplierTableItem>? _suppliers;
+
+    protected async override Task OnInitializedAsync()
+    {
+        await FillList();
+    }
+
+    private async Task FillList()
+    {
+        var allSuppliers = await SupplierService.GetAllSuppliersAsync();
+        _suppliers = allSuppliers.Data;
+    }
+
+    private async Task OpenCreateSupplierDialog()
+    {
+        DialogOptions maxWidth = new DialogOptions() { MaxWidth = MaxWidth.Medium, FullWidth = true };
+        var parameters = new DialogParameters();
+
+        parameters.Add("IsNew", true);
+        var dialog = await DialogService.ShowAsync<EditSupplierDialog>("Добавление поставщика", parameters, options: maxWidth);
+
+        var res = await dialog.Result;
+
+        if (!res.Canceled)
+        {
+            await FillList();
+        }
+    }
+
+    private async Task OpenEditSupplierDialog(SupplierTableItem supplier)
+    {
+        DialogOptions maxWidth = new DialogOptions() { MaxWidth = MaxWidth.Medium, FullWidth = true };
+        var parameters = new DialogParameters();
+
+        parameters.Add("SupplierId", supplier.Id); 
+        var dialog = await DialogService.ShowAsync<EditSupplierDialog>("Изменение данных поставщика", parameters, options: maxWidth);
+
+        var res = await dialog.Result;
+
+        if (!res.Canceled)
+        {
+            await FillList();
+        }
+    }
+}
