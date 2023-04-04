@@ -20,11 +20,11 @@
                 </MudItem>
                 <MudItem xs="6">
                     <MudTextField T="string" Label="ИНН"  
-                        @bind-Value="_supplier.Inn" For="@(() => _supplier.Inn)"></MudTextField>
+                        @bind-Value="_supplier.Inn" For="@(() => _supplier.Inn)" Mask="@(new PatternMask("0000000000"))"></MudTextField>
                 </MudItem>
                 <MudItem xs="6">
                     <MudTextField T="string" Label="Телефон"
-                        @bind-Value="_supplier.PhoneNumber" For="@(() => _supplier.PhoneNumber)"></MudTextField>
+                        @bind-Value="_supplier.PhoneNumber" For="@(() => _supplier.PhoneNumber)" Mask="@(new PatternMask("+0 (000) 000 00-00"))"></MudTextField>
                 </MudItem>
             </MudGrid>
             <MudTable T="SupplierSparePartItem" Class="mt-5" Items="@_supplier.SpareParts" Filter="new Func<SupplierSparePartItem,bool>(SearchTextFilter)" Hover="true" Breakpoint="Breakpoint.Sm">

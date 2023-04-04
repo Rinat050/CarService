@@ -10,8 +10,6 @@ namespace CarService.Domain.Models
         public string? Name { get; set; }
 
         [Required(ErrorMessage = "Поле не может быть пустым!")]
-        [StringLength(10, MinimumLength = 10, ErrorMessage = "Необходимо 10 цифр!")]
-        [RegularExpression(@"^[0-9]{10}$", ErrorMessage = "Недопустимые символы!")]
         public string? Inn { get; set; }
 
         [Required(ErrorMessage = "Поле не может быть пустым!")]
