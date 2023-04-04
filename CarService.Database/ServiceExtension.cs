@@ -15,6 +15,7 @@ namespace CarService.Database
             services.AddScoped<IBrandRepository, BrandRepository>();
             services.AddScoped<IModelRepository, ModelRepository>();
             services.AddScoped<IDefectRepository, DefectRepository>();
+            services.AddScoped<ISupplierOrderRepository, SupplierOrderRepository>();
             services.AddScoped<IRepairRepository, RepairRepository>();
             services.AddScoped<ISparePartRepository, SparePartRepository>();
             services.AddScoped<IClientRepository, ClientRepository>();

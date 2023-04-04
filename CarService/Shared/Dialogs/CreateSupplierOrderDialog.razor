@@ -1,0 +1,226 @@
+﻿@using CarService.Domain.Enums
+@using CarService.Domain.Models
+@using CarService.Domain.Response
+@using CarService.Domain.Services.Interfaces
+
+@inject ISupplierService SupplierService
+@inject ISupplierOrderService OrderService
+@inject ISparePartService SparePartService
+@inject IUserService UserService
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+<EditForm Model="_order" OnValidSubmit="@Save">
+    <DataAnnotationsValidator/>
+    <MudDialog>
+        <DialogContent>
+            <MudGrid>
+                <MudItem xs="4">
+                    <MudText>Дата заказа: @_order.CreatedDate</MudText>
+                </MudItem>
+                <MudItem xs="4">
+                    <MudText Class="fs-6" Color="Color.Default">Итоговая стоимость: <MudText Inline Class="fw-bold fs-6" Color="Color.Success">@_totalPrice руб.</MudText></MudText>
+                </MudItem>
+            </MudGrid>
+            <MudGrid>
+                <MudItem xs="4">
+                    @if (IsNew)
+                    {
+                        <MudSelect T="SupplierTableItem" For="@(() => _order.Supplier)" ValueChanged="@(SupplierSelect)" ToStringFunc="@_supplierConverter" Label="Поставщик" AnchorOrigin="Origin.BottomCenter">
+                            @foreach (SupplierTableItem supplier in _suppliers)
+                            {
+                                <MudSelectItem Value="supplier"></MudSelectItem>
+                            }
+                        </MudSelect>
+                    }
+                    else
+                    {
+                        <MudText>Поставщик: @_order.Supplier?.Name</MudText>
+                    }
+                </MudItem>
+            </MudGrid>   
+            <MudTable T="SparePartListItem"  OnRowClick="ChangeSparePartCount" Class="mt-5" Items="@_order.SpareParts" Hover="true" Breakpoint="Breakpoint.Sm">
+                <ToolBarContent>
+                    <MudGrid Class="align-items-center" >
+                        <MudItem><MudText><strong>Список запчастей</strong></MudText></MudItem>
+                        <MudSpacer/>
+                        @if (IsNew)
+                        {
+                            <MudItem><MudFab Class="me-4" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Size="Size.Small" OnClick="@(() => OpenAddSparePartDialog())"></MudFab> </MudItem>   
+                        }   
+                    </MudGrid>
+                </ToolBarContent>
+                <HeaderContent>
+                    <MudTh>Название</MudTh>
+                    <MudTh>Модель</MudTh>
+                    <MudTh>Закупочная цена</MudTh>
+                    <MudTh>Количество</MudTh>
+                    @if (IsNew)
+                    {
+                        <MudTh>Удаление</MudTh>
+                    }
+                </HeaderContent>
+                <RowTemplate Context="tableContext">
+                    <MudTd DataLabel="Название">@tableContext.SparePart.Name</MudTd>
+                    <MudTd DataLabel="Модель">@(tableContext.SparePart.Model.Brand.Name + " " + tableContext.SparePart.Model.Name)</MudTd>
+                    <MudTd DataLabel="Закупочная цена">@tableContext.Price руб.</MudTd>
+                    <MudTd DataLabel="Количество">@tableContext.Count</MudTd>
+                    @if (IsNew)
+                    {
+                        <MudTd DataLabel="Удаление"><MudIconButton Icon="@Icons.Filled.Delete" Size="Size.Medium" Color="Color.Error" OnClick="@(() => DeleteSparePart(tableContext))"></MudIconButton></MudTd>
+                    }   
+                </RowTemplate>
+            </MudTable>
+        </DialogContent>
+            <DialogActions>
+                @if (IsNew)
+                {
+                    <MudButton OnClick="@Close">ОТМЕНА</MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" ButtonType="ButtonType.Submit">ЗАКАЗАТЬ</MudButton>
+                }
+            </DialogActions>
+    </MudDialog>
+</EditForm>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+
+    [Parameter] public string OrderId { get; set; } = "";
+    [Parameter] public bool IsNew { get; set; }
+
+    private SupplierOrder _order = null!;
+    private List<SupplierTableItem> _suppliers = new();
+    private string _searchText = "";
+    private List<SupplierSparePartItem> _supplierSpareParts = new();
+    private int _totalPrice => GetTotalCost();
+
+    readonly Func<SupplierTableItem, string?> _supplierConverter = p => $"{p?.Name}";
+
+    private void Close() => MudDialog.Close();
+
+    private int GetTotalCost()
+    {
+        if (_order.SpareParts != null)
+        {
+            return _order.SpareParts.Sum(x => x.Count * x.Price);
+        }
+
+        return 0;
+    }
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+
+        if (IsNew)
+        {
+            _order = new SupplierOrder() {CreatedDate = DateTime.Now};
+            _order.SpareParts = new();
+            return;
+        }
+
+        if (_order is null)
+        {
+            _order = new SupplierOrder();
+        }
+    }
+
+    protected async override Task OnInitializedAsync()
+    {
+        var suppliersRes = await SupplierService.GetAllSuppliersAsync();
+
+        if (suppliersRes.Success)
+        {
+            _suppliers = suppliersRes.Data!;
+        }
+
+        if (IsNew) return;
+
+        var orderResult = await OrderService.GetSupplierOrderByIdAsync(OrderId);
+
+        if (orderResult.Success)
+        {
+            _order = orderResult.Data!;
+        };
+    }
+
+    private async Task Save()
+    {
+        if (_order.SpareParts.Count == 0)
+        {
+            Snackbar.Add("Выберите запчасти!", Severity.Warning);
+            return;
+        }
+
+        BaseResponse<SupplierOrder> result;
+
+        result = await OrderService.CreateSupplierOrderAsync(_order);
+
+        if (result.Success)
+        {
+            Snackbar.Add(result.Description, Severity.Success);
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+        else
+        {
+            Snackbar.Add(result.Description, Severity.Error);
+        }
+    }
+
+    private async Task OpenAddSparePartDialog()
+    {
+        DialogOptions maxWidth = new DialogOptions() { MaxWidth = MaxWidth.Medium, FullWidth = true };
+        var parameters = new DialogParameters();
+
+        parameters.Add("CurrentSpareParts", _order.SpareParts);
+        parameters.Add("AllSpareParts", _supplierSpareParts);
+        var dialog = await DialogService.ShowAsync<SupplierOrderSparePartsDialog>("Список запчастей", parameters, options: maxWidth);
+        var result = await dialog.Result;
+
+        StateHasChanged();  
+    }
+
+    private void DeleteSparePart(SparePartListItem sparePart)
+    {
+        _order.SpareParts!.Remove(sparePart);
+    }
+
+    private async void SupplierSelect(SupplierTableItem supplier)
+    {
+        _order.SpareParts = new();
+
+        _order.Supplier = supplier;
+
+        if (supplier is not null)
+        {
+            var res = await SupplierService.GetSupplierSparePartsAsync(supplier.Id);
+            _supplierSpareParts = res.Data!;
+            return;
+        }
+
+        _supplierSpareParts = new();
+    }
+
+    private async void ChangeSparePartCount(TableRowClickEventArgs<SparePartListItem> args)
+    {
+        if (!IsNew) return;
+
+        var parameters = new DialogParameters();
+
+        parameters.Add("CurrentCount", args.Item.Count);
+
+        parameters.Add("MaxCount", 200);
+
+        var dialog = await DialogService.ShowAsync<ChangeCountDialog>("Количество запчасти", parameters);
+        var result = await dialog.Result;
+
+        if (result.Data is null)
+        {
+            return;
+        }
+
+        args.Item.Count = (int) result.Data;
+
+        StateHasChanged();
+    }
+}

@@ -8,10 +8,12 @@ namespace CarService.Domain.Services
     public class SupplierOrderService : ISupplierOrderService
     {
         private ISupplierOrderRepository _orderRepository;
+        private ISparePartService _sparePartService;
 
-        public SupplierOrderService(ISupplierOrderRepository repository)
+        public SupplierOrderService(ISupplierOrderRepository repository, ISparePartService sparePartService)
         {
             _orderRepository = repository;
+            _sparePartService = sparePartService;
         }
 
         public async Task<BaseResponse<SupplierOrder>> CreateSupplierOrderAsync(SupplierOrder order)
@@ -19,6 +21,17 @@ namespace CarService.Domain.Services
             try
             {
                 await _orderRepository.AddSupplierOrderAsync(order);
+
+                var res = await ChangeSparePartsCountAsync(order.SpareParts);
+
+                if (!res)
+                {
+                    return new BaseResponse<SupplierOrder>()
+                    {
+                        Success = false,
+                        Description = "Произошла ошибка!"
+                    };
+                }
 
                 return new BaseResponse<SupplierOrder>()
                 {
@@ -87,6 +100,20 @@ namespace CarService.Domain.Services
                     Description = "Внутренняя ошибка!"
                 };
             }
+        }
+
+        private async Task<bool> ChangeSparePartsCountAsync(List<SparePartListItem> spareParts)
+        {
+            if (spareParts != null)
+            {
+                foreach (var part in spareParts)
+                {
+                    var res = await _sparePartService.ChangeSparePartCountAsync(part.SparePart.Id, part.Count);
+                    if (!res.Success) return false;
+                }
+            }
+
+            return true;
         }
     }
 }

@@ -1,0 +1,108 @@
+﻿@page "/suppliersOrders"
+@using CarService.Domain.Enums
+@using CarService.Domain.Models
+@using CarService.Domain.Response
+@using CarService.Domain.Services.Interfaces
+@using CarService.Extensions
+@using CarService.Shared.Dialogs
+
+@inject IUserService UserService
+@inject ISupplierOrderService OrderService
+@inject IDialogService DialogService
+@inject NavigationManager NavManager
+
+<MudPaper Class="m-2 p-3" Elevation="3">
+    @if (UserService.CurrentUser is null)
+    {
+        <MudAlert Variant="Variant.Outlined" ContentAlignment="HorizontalAlignment.Center" Severity="Severity.Warning">Необходимо авторизоваться!</MudAlert>
+    }
+    else if (!(UserService.CurrentUser.Role is Roles.Manager || UserService.CurrentUser.Role is Roles.Admin))
+    {
+        <MudAlert Variant="Variant.Outlined" ContentAlignment="HorizontalAlignment.Center" Severity="Severity.Warning">Недостаточно прав!</MudAlert>
+    }
+    else
+    {
+        @if (_loading)
+        {
+            <MudProgressCircular Color="Color.Primary" Size="Size.Medium" Indeterminate="true"></MudProgressCircular>
+        }
+        else
+        {
+            <MudGrid>
+                <MudItem><MudText Typo="Typo.h6" Class="fw-bold" Color="Color.Primary">ЗАКАЗЫ ПОСТАВЩИКАМ</MudText></MudItem>
+                <MudSpacer/>
+                @if (UserService.CurrentUser.Role == Roles.Manager || UserService.CurrentUser.Role == Roles.Admin)
+                {
+                     <MudItem>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@OpenCreateOrderlDialog">
+                            <MudText Typo="Typo.button" Class="fw-bold">НОВЫЙ ЗАКАЗ</MudText>
+                        </MudButton>
+                    </MudItem>
+                }
+            </MudGrid>  
+
+            <MudTable SelectedItemChanged="@SelectSupplier" T="SupplierOrderTableItem" Class="mt-5" Items="@_orders" Hover="true" Breakpoint="Breakpoint.Sm">
+                <HeaderContent>
+                    <MudTh><MudTableSortLabel SortBy="new Func<SupplierOrderTableItem, object>(x=>x.CreatedDate)">Дата заказа</MudTableSortLabel></MudTh>
+                    <MudTh><MudTableSortLabel SortBy="new Func<SupplierOrderTableItem, object>(x=>x.Supplier)">Поставщик</MudTableSortLabel></MudTh>
+                    <MudTh><MudTableSortLabel SortBy="new Func<SupplierOrderTableItem, object>(x=>x.TotalCost)">Итоговая стоимость</MudTableSortLabel></MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Дата заказа">@(context.CreatedDate.ToString("D"))</MudTd>
+                    <MudTd DataLabel="Поставщик">@context.Supplier</MudTd>
+                    <MudTd DataLabel="Итоговая стоимость">@context.TotalCost руб.</MudTd>
+                </RowTemplate>
+                <PagerContent>
+                    <MudTablePager HorizontalAlignment="HorizontalAlignment.Center" PageSizeOptions="new int[]{10, 25, 50, 100}" HidePagination="true" InfoFormat="{first_item}-{last_item} из {all_items}" RowsPerPageString="Отображать строк:"/>
+                </PagerContent>
+            </MudTable>
+        }     
+    }
+</MudPaper>
+
+@code {
+    private List<SupplierOrderTableItem>? _orders;
+    private bool _loading = true;
+
+    protected async override Task OnInitializedAsync()
+    {
+        if (UserService.CurrentUser != null)
+        {
+             await FillList();
+        }
+    }
+
+    private async Task FillList()
+    {
+        var res = await OrderService.GetAllSuppliersOrdersAsync();
+
+        _orders = res.Data!;
+
+        _loading = false;
+    }
+
+    private async Task OpenCreateOrderlDialog()
+    {
+        DialogOptions maxWidth = new DialogOptions() { MaxWidth = MaxWidth.Medium, FullWidth = true };
+        var parameters = new DialogParameters();
+
+        parameters.Add("IsNew",true);
+        var dialog = await DialogService.ShowAsync<CreateSupplierOrderDialog>("Новый заказ", parameters, options: maxWidth);
+        var res = await dialog.Result;
+
+        if (!res.Canceled)
+        {
+            await FillList();
+        }
+    }
+
+    private async Task SelectSupplier(SupplierOrderTableItem order)
+    {
+        DialogOptions maxWidth = new DialogOptions() { MaxWidth = MaxWidth.Medium, FullWidth = true };
+        var parameters = new DialogParameters();
+
+        parameters.Add("OrderId",order.Id);
+        var dialog = await DialogService.ShowAsync<CreateSupplierOrderDialog>("Заказ поставщику", parameters, options: maxWidth);
+        var res = await dialog.Result;
+    }
+}

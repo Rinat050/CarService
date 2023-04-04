@@ -1,0 +1,73 @@
+﻿@using CarService.Domain.Models
+@using CarService.Domain.Response
+@using CarService.Domain.Services.Interfaces
+
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <DialogContent>
+        <MudTable T="SupplierSparePartItem" Class="mt-5" Items="@AllSpareParts" Filter="new Func<SupplierSparePartItem,bool>(SearchTextFilter)" Hover="true" Breakpoint="Breakpoint.Sm" SelectedItemChanged="@SelectSparePart">
+            <ToolBarContent>
+                <MudTextField T="string" Label="Поиск" @bind-Value="_searchText"></MudTextField>
+            </ToolBarContent>
+            <HeaderContent>
+                <MudTh>Название</MudTh>
+                <MudTh>Модель</MudTh>
+                <MudTh>Закупочная цена</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Название">@context.SparePart.Name</MudTd>
+                <MudTd DataLabel="Модель">@(context.SparePart.Model.Brand.Name + " " + context.SparePart.Model.Name)</MudTd>
+                <MudTd DataLabel="Стоимость">@context.Cost руб.</MudTd>
+            </RowTemplate>
+        </MudTable>
+    </DialogContent>
+</MudDialog>
+
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    [Parameter] public List<SparePartListItem> CurrentSpareParts { get; set; } = null!;
+    [Parameter] public List<SupplierSparePartItem> AllSpareParts { get; set; } = null!;
+
+    private string _searchText = "";
+
+    private void Close() => MudDialog.Close();
+
+    private void SelectSparePart(SupplierSparePartItem sparePart)
+    {
+        var existSparePart = CurrentSpareParts.FirstOrDefault(x => x.SparePart.Id == sparePart.SparePart.Id);
+
+        if (existSparePart is null)
+        {
+            CurrentSpareParts.Add
+            (
+                new SparePartListItem()
+                {
+                    SparePart = sparePart.SparePart,
+                    Count = 1,
+                    Price = sparePart.Cost
+                }
+            );
+        }
+
+        Close();
+    }
+
+    private bool SearchTextFilter(SupplierSparePartItem sparePart) => FilterFunc(sparePart, _searchText);
+
+    private bool FilterFunc(SupplierSparePartItem sparePart, string searchString)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+        if (sparePart.SparePart.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (sparePart.SparePart.Model.Brand.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (sparePart.SparePart.Model.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if ($"{sparePart.SparePart.Model.Brand.Name} {sparePart.SparePart.Model.Name}".Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        return false;
+    }
+}

@@ -27,7 +27,7 @@
             <MudGrid>
                 <MudItem><MudText Typo="Typo.h6" Class="fw-bold" Color="Color.Primary">ЗАКАЗЫ-НАРЯДЫ</MudText></MudItem>
                 <MudSpacer/>
-                @if (UserService.CurrentUser.Role == Roles.Manager)
+                @if (UserService.CurrentUser.Role == Roles.Manager || UserService.CurrentUser.Role == Roles.Admin)
                 {
                      <MudItem>
                         <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@OpenCreateOrderlDialog">

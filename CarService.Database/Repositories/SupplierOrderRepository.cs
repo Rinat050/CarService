@@ -69,7 +69,7 @@ namespace CarService.Database.Repositories
                 {
                     Id = orderInfo.Id.ToString(),
                     CreatedDate = orderInfo.CreatedDate,
-                    Supplier = _supplierRepository.GetSupplierById(orderInfo.SupplierId),
+                    Supplier = _supplierRepository.GetSupplierInfoById(orderInfo.SupplierId),
                     SpareParts = orderInfo.SpareParts
                         .Select(z => new SparePartListItem()
                         {

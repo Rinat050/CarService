@@ -47,8 +47,7 @@ namespace CarService.Database.Repositories
                     Id = x.Id.ToString(),
                     Name = x.Name,
                     Inn = x.Inn,
-                    PhoneNumber = x.PhoneNumber
-                    
+                    PhoneNumber = x.PhoneNumber   
                 }).ToList<SupplierTableItem>();
         }
 
@@ -131,6 +130,29 @@ namespace CarService.Database.Repositories
                             SparePart = _sparePartRepository.GetSparePartById(z.SparePartId),
                             Cost = z.Cost
                         }).ToList(),
+                };
+            }
+
+            return null;
+        }
+
+        public SupplierTableItem GetSupplierInfoById(string id)
+        {
+            var filter = Builders<SupplierDb>.Filter.Eq("_id", new ObjectId(id));
+
+            var supplier = _suppliers
+                .Find<SupplierDb>(filter);
+
+            var supplierInfo = supplier.FirstOrDefault();
+
+            if (supplierInfo is not null)
+            {
+                return new SupplierTableItem()
+                {
+                    Id = supplierInfo.Id.ToString(),
+                    Name = supplierInfo.Name,
+                    Inn = supplierInfo.Inn,
+                    PhoneNumber = supplierInfo.PhoneNumber
                 };
             }
 
