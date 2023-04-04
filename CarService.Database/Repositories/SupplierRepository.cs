@@ -137,6 +137,23 @@ namespace CarService.Database.Repositories
             return null;
         }
 
+        public string GetSupplierNameByIdAsync(string id)
+        {
+            var filter = Builders<SupplierDb>.Filter.Eq("_id", new ObjectId(id));
+
+            var supplier = _suppliers
+                .Find<SupplierDb>(filter);
+
+            var supplierInfo = supplier.FirstOrDefault();
+
+            if (supplierInfo is not null)
+            {
+                return supplierInfo.Name;
+            }
+
+            return null;
+        }
+
         public async Task<List<SupplierSparePartItem>?> GetSupplierSparePartsAsync(string supplierId)
         {
             var filter = Builders<SupplierDb>.Filter.Eq("_id", new ObjectId(supplierId));

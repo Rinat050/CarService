@@ -14,6 +14,8 @@ namespace CarService.Domain.Repositories
 
         public Task<Supplier> GetSupplierByIdAsync(string id);
 
+        public string GetSupplierNameByIdAsync(string id);
+
         public Supplier GetSupplierById(string id);
 
         public Task UpdateSupplierAsync(string id, Supplier supplier);
