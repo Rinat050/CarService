@@ -10,6 +10,8 @@
 @inject IUserService UserService
 @inject IDialogService DialogService
 
+<PageTitle>Клиенты</PageTitle>
+
 <MudPaper Class="m-2 p-3" Elevation="3">
     @if (UserService.CurrentUser is null)
     {

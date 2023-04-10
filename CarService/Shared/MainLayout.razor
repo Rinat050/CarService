@@ -20,6 +20,7 @@
 <MudLayout>
     <MudAppBar>
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Secondary" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())"/>
+        <MudImage Class="ms-4" Src="images/logo-grey.png" Height="50" Width="55"></MudImage>
         <MudSpacer/>
         @if (UserService.CurrentUser is not null)
         {
