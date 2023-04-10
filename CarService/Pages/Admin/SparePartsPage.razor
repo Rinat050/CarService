@@ -23,18 +23,7 @@
         <MudGrid>
             <MudItem><MudText Typo="Typo.h6" Class="fw-bold" Color="Color.Primary">ЗАПЧАСТИ</MudText></MudItem>
             <MudSpacer/>
-            @if (_models is not null)
-            {
-                 <MudItem>
-                    <MudSelect T="Model" AdornmentIcon="@Icons.Filled.Search" Value="_searchModel" ValueChanged="@(ChangeSparePartsList)" Class="m-0 p-0" ToStringFunc="@_converter" Label="Модель" AnchorOrigin="Origin.BottomCenter" Clearable>
-                        @foreach (Model model in _models)
-                        {   
-                            <MudSelectItem Value="model"/>   
-                        }
-                    </MudSelect>
-                </MudItem>
-            }
-
+            <MudTextField Adornment="Adornment.Start" IconSize="Size.Medium" AdornmentIcon="@Icons.Material.Filled.Search" T="string" Label="Поиск" @bind-Value="_searchText"></MudTextField>
             @if (UserService.CurrentUser.Role is Roles.Manager || UserService.CurrentUser.Role is Roles.Admin)
             {
                 <MudItem>
@@ -45,12 +34,12 @@
             }  
         </MudGrid>  
 
-        <MudTable Class="mt-5" Items="@_spareParts" Hover="true" Breakpoint="Breakpoint.Sm">
+        <MudTable T="SparePart" Filter="new Func<SparePart,bool>(SearchTextFilter)" Class="mt-5" Items="@_spareParts" Hover="true" Breakpoint="Breakpoint.Sm">
             <HeaderContent>
                 <MudTh>Название</MudTh>
                 <MudTh>Модель</MudTh>
-                <MudTh>Стоимость</MudTh>
-                <MudTh>Количество</MudTh>
+                <MudTh><MudTableSortLabel SortBy="new Func<SparePart, object>(x=>x.Price)">Стоимость</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel SortBy="new Func<SparePart, object>(x=>x.Count)">Количество</MudTableSortLabel></MudTh>
                 @if (UserService.CurrentUser.Role is Roles.Manager || UserService.CurrentUser.Role is Roles.Admin)
                 {
                     <MudTh>Изменение</MudTh>
@@ -75,18 +64,13 @@
 
 @code {
     private List<SparePart>? _spareParts;
-    private List<Model> _models;
-    private Model _searchModel = null!;
+    private string _searchText = "";
 
     readonly Func<Model, string?> _converter = p => p?.Brand?.Name + " " + p?.Name;
 
 
     protected async override Task OnInitializedAsync()
     {
-        var result = await ModelService.GetAllModelsAsync();
-
-        _models = result.Data;
-
         await FillList();
     }
 
@@ -95,8 +79,6 @@
         var allSpareParts = await SparePartService.GetAllSparePartsAsync();
 
         _spareParts = allSpareParts.Data;
-
-        _searchModel = null!;
     }
 
     private async Task OpenCreateSparePartlDialog()
@@ -127,22 +109,22 @@
         }
     }
 
-    private async void ChangeSparePartsList(Model model)
+    private bool SearchTextFilter(SparePart sparePart) => FilterFunc(sparePart, _searchText);
+
+    private bool FilterFunc(SparePart sparePart, string searchString)
     {
-        BaseResponse<List<SparePart>> allSpareParts;
-
-        if (model == null)
-        {
-            allSpareParts = await SparePartService.GetAllSparePartsAsync();
-        }
-        else
-        {
-            allSpareParts = await SparePartService.GetSparePartsByModelAsync(model);
-        }
-
-        _searchModel = model;
-        _spareParts = allSpareParts.Data;
-
-        StateHasChanged();
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+        if (sparePart.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (sparePart.Number.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (sparePart.Model.Brand.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (sparePart.Model.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+         if ($"{sparePart.Model.Brand.Name} {sparePart.Model.Name}".Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        return false;
     }
 }

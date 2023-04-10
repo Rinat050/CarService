@@ -20,28 +20,31 @@
         <MudGrid>
             <MudItem><MudText Typo="Typo.h6" Class="fw-bold" Color="Color.Primary">ПОЛЬЗОВАТЕЛИ</MudText></MudItem>
             <MudSpacer/>
-            <MudItem>
-                <MudSelect T="Roles" Value="@_searchRole" AdornmentIcon="@Icons.Filled.Search"  ValueChanged="@(ChangeUserList)" Class="m-0 p-0" ToStringFunc="@_converter" Label="Роль" AnchorOrigin="Origin.BottomCenter" Clearable>
-                    @foreach (Roles role in Enum.GetValues(typeof(Roles)))
-                    {
-                        <MudSelectItem Value="role"/>   
-                    }
-                </MudSelect>
-            </MudItem>
-            <MudItem>
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@OpenCreateUserDialog">
-                    <MudText Typo="Typo.button" Class="fw-bold">ДОБАВИТЬ</MudText>
-                </MudButton>
-            </MudItem>
+           <MudTextField Adornment="Adornment.Start" IconSize="Size.Medium" AdornmentIcon="@Icons.Material.Filled.Search" T="string" Label="Поиск" @bind-Value="_searchText"></MudTextField>
+            @if (UserService.CurrentUser.Role is Roles.Admin)
+            {
+                <MudItem>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@OpenCreateUserDialog">
+                        <MudText Typo="Typo.button" Class="fw-bold">ДОБАВИТЬ</MudText>
+                    </MudButton>
+                </MudItem>
+            }
         </MudGrid>  
 
-        <MudTable Class="mt-5" Items="@_users" Hover="true" Breakpoint="Breakpoint.Sm" Loading="@_loading" LoadingProgressColor="Color.Info">
+        <MudTable T="User" Filter="new Func<User,bool>(SearchTextFilter)" Class="mt-5" Items="@_users" Hover="true" Breakpoint="Breakpoint.Sm">
             <HeaderContent>
                 <MudTh>Фамилия</MudTh>
                 <MudTh>Имя</MudTh>
                 <MudTh>Роль</MudTh>
                 <MudTh>Телефон</MudTh>
-                <MudTh>Изменение</MudTh>
+                @if (UserService.CurrentUser.Role is Roles.Admin)
+                {
+                    <MudTh>Изменение</MudTh>
+                }
+                else
+                {
+                    <MudTh>Адрес</MudTh>
+                }
             </HeaderContent>
             <RowTemplate>
                 <MudTd DataLabel="Фамилия">@context.Surname</MudTd>
@@ -51,8 +54,15 @@
                 @{
                     var user = (User) context;
                 }
-                <MudTd DataLabel="Изменение"><MudIconButton Icon="@Icons.Filled.Edit" OnClick="@(() => OpenEditUserDialog(user))" Size="Size.Medium"></MudIconButton></MudTd>
-            </RowTemplate>
+                @if (UserService.CurrentUser.Role is Roles.Admin)
+                {
+                    <MudTd DataLabel="Изменение"><MudIconButton Icon="@Icons.Filled.Edit" OnClick="@(() => OpenEditUserDialog(user))" Size="Size.Medium"></MudIconButton></MudTd>
+                }
+                else
+                {
+                    <MudTd DataLabel="Адрес">@context.Address</MudTd>
+                }
+        </RowTemplate>
     </MudTable>
     }
     else
@@ -63,8 +73,7 @@
 
 @code {
     private List<User>? _users;
-    private bool _loading;
-    private Roles _searchRole;
+    private string _searchText = "";
     readonly Func<Roles, string?> _converter = p => p.GetDisplayName();
 
     protected async override Task OnInitializedAsync()
@@ -76,7 +85,6 @@
     {
         var allUsers = await UserService.GetAllUsersAsync();
         _users = allUsers.Data;
-        _searchRole = 0;
     }
 
     private async Task OpenCreateUserDialog()
@@ -105,23 +113,20 @@
         }
     }
 
-    private async void ChangeUserList(Roles role)
+    private bool SearchTextFilter(User user) => FilterFunc(user, _searchText);
+
+    private bool FilterFunc(User user, string searchString)
     {
-        BaseResponse<List<User>> allUsers;
-
-        if (role == 0)
-        {
-            _searchRole = 0;
-            allUsers = await UserService.GetAllUsersAsync();
-        }
-        else
-        {
-            _searchRole = role;
-            allUsers = await UserService.GetUsersByRoleAsync(role);
-        }
-
-        _users = allUsers.Data;
-
-        StateHasChanged();
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+        if (user.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (user.Surname.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if ($"{user.Surname} {user.Name} {user.Patronymic}".Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (user.Role.GetDisplayName()!.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        return false;
     }
 }

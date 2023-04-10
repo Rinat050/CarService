@@ -22,17 +22,7 @@
         <MudGrid>
             <MudItem><MudText Typo="Typo.h6" Class="fw-bold" Color="Color.Primary">АВТОМОБИЛИ</MudText></MudItem>
             <MudSpacer/>
-            <MudItem>
-                @if (_clients != null)
-                {
-                    <MudSelect T="Client" AdornmentIcon="@Icons.Filled.Search" Value="_searchClient"  ValueChanged="@(ChangeCarList)" Class="m-0 p-0" ToStringFunc="@_clientConverter" Label="Владелец" AnchorOrigin="Origin.BottomCenter" Clearable>
-                        @foreach (Client client in _clients)
-                        {
-                            <MudSelectItem Value="client"/>   
-                        }
-                    </MudSelect>
-                }               
-            </MudItem>
+            <MudTextField Adornment="Adornment.Start" IconSize="Size.Medium" AdornmentIcon="@Icons.Material.Filled.Search" T="string" Label="Поиск" @bind-Value="_searchText"></MudTextField>
             <MudItem>
                 <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@OpenCreateCarDialog">
                     <MudText Typo="Typo.button" Class="fw-bold">ДОБАВИТЬ</MudText>
@@ -40,7 +30,7 @@
             </MudItem>
         </MudGrid>  
 
-        <MudTable Class="mt-5" Items="@_cars" Hover="true" Breakpoint="Breakpoint.Sm">
+        <MudTable T="Car" Filter="new Func<Car,bool>(SearchTextFilter)" Class="mt-5" Items="@_cars" Hover="true" Breakpoint="Breakpoint.Sm">
             <HeaderContent>
                 <MudTh>Владелец</MudTh>
                 <MudTh>Гос - номер</MudTh>
@@ -66,21 +56,16 @@
 
 @code {
     private List<Car>? _cars;
-    private List<Client>? _clients;
-    private Client _searchClient;
+    private string _searchText = "";
     readonly Func<Client, string?> _clientConverter = p => ($"{p?.Surname} {p?.Name} {p?.Patronymic}");
 
     protected async override Task OnInitializedAsync()
     {
-        var allClients = await ClientService.GetAllClientsAsync();
-        _clients = allClients.Data;
-
         await FillList();
     }
 
     private async Task FillList()
     {
-        _searchClient = null!;
         var allCars = await CarService.GetAllCarsAsync();
         _cars = allCars.Data;
     }
@@ -115,22 +100,28 @@
         }
     }
 
-    private async void ChangeCarList(Client client)
+    private bool SearchTextFilter(Car car) => FilterFunc(car, _searchText);
+
+    private bool FilterFunc(Car car, string searchString)
     {
-        BaseResponse<List<Car>> allCars;
-
-        if (client == null)
-        {
-            allCars = await CarService.GetAllCarsAsync();
-        }
-        else
-        {
-            allCars = await CarService.GetCarsByClientAsync(client);
-        }
-
-        _searchClient = client;
-        _cars = allCars.Data;
-
-        StateHasChanged();
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+        if (car.Client.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (car.Client.Surname.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (car.StateNumber.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (car.VinNumber.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (car.Model.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (car.Model.Brand.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if ($"{car.Model.Brand.Name} {car.Model.Name}".Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if ($"{car.Client.Surname} {car.Client.Name}".Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        return false;
     }
 }

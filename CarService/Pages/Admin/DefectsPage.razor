@@ -21,6 +21,7 @@
         <MudGrid>
             <MudItem><MudText Typo="Typo.h6" Class="fw-bold" Color="Color.Primary">НЕИСПРАВНОСТИ</MudText></MudItem>
             <MudSpacer/>
+            <MudTextField Adornment="Adornment.Start" IconSize="Size.Medium" AdornmentIcon="@Icons.Material.Filled.Search" T="string" Label="Поиск" @bind-Value="_searchText"></MudTextField>
             <MudItem>
                 <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@OpenCreateDefectDialog">
                     <MudText Typo="Typo.button" Class="fw-bold">ДОБАВИТЬ</MudText>
@@ -28,7 +29,7 @@
             </MudItem>
         </MudGrid>  
 
-        <MudTable Class="mt-5" Items="@_defects" Hover="true" Breakpoint="Breakpoint.Sm">
+        <MudTable T="Defect" Filter="new Func<Defect,bool>(SearchTextFilter)" Class="mt-5" Items="@_defects" Hover="true" Breakpoint="Breakpoint.Sm">
             <HeaderContent>
                 <MudTh>Описание</MudTh>
                 <MudTh>Изменение</MudTh>
@@ -50,6 +51,7 @@
 
 @code {
     private List<Defect>? _defects;
+    private string _searchText = "";
 
     protected async override Task OnInitializedAsync()
     {
@@ -91,5 +93,16 @@
         {
             await FillList();
         }
+    }
+
+    private bool SearchTextFilter(Defect defect) => FilterFunc(defect, _searchText);
+
+    private bool FilterFunc(Defect defect, string searchString)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+        if (defect.Description.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        return false;
     }
 }

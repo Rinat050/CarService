@@ -29,6 +29,7 @@
             <MudGrid>
                 <MudItem><MudText Typo="Typo.h6" Class="fw-bold" Color="Color.Primary">ЗАКАЗЫ-НАРЯДЫ</MudText></MudItem>
                 <MudSpacer/>
+                <MudTextField Adornment="Adornment.Start" IconSize="Size.Medium" AdornmentIcon="@Icons.Material.Filled.Search" T="string" Label="Поиск" @bind-Value="_searchText"></MudTextField>
                 @if (UserService.CurrentUser.Role == Roles.Manager || UserService.CurrentUser.Role == Roles.Admin)
                 {
                      <MudItem>
@@ -39,7 +40,7 @@
                 }
             </MudGrid>  
 
-            <MudTable Class="mt-5" Items="@_orders" Hover="true" Breakpoint="Breakpoint.Sm">
+            <MudTable T="PurchaseOrderTableItem" Filter="new Func<PurchaseOrderTableItem,bool>(SearchTextFilter)" Class="mt-5" Items="@_orders" Hover="true" Breakpoint="Breakpoint.Sm">
                 <HeaderContent>
                     <MudTh><MudTableSortLabel SortBy="new Func<PurchaseOrderTableItem, object>(x=>x.CreatedDate)">Дата создания</MudTableSortLabel></MudTh>
                     <MudTh><MudTableSortLabel SortBy="new Func<PurchaseOrderTableItem, object>(x=>x.Client)">Клиент</MudTableSortLabel></MudTh>
@@ -67,6 +68,7 @@
 @code {
     private List<PurchaseOrderTableItem>? _orders;
     private bool _loading = true;
+    private string _searchText = "";
 
     protected async override Task OnInitializedAsync()
     {
@@ -93,7 +95,7 @@
             res = await OrderService.GetAllPurchaseOrdersAsync();
         }
 
-        _orders = res.Data!;
+        _orders = res.Data!.OrderByDescending(x => x.CreatedDate).ToList();
 
         _loading = false;
     }
@@ -112,5 +114,20 @@
     private void OpenEditOrderDialog(string orderId)
     {
         NavManager.NavigateTo($"/purchaseOrder/{orderId}");
+    }
+
+    private bool SearchTextFilter(PurchaseOrderTableItem order) => FilterFunc(order, _searchText);
+
+    private bool FilterFunc(PurchaseOrderTableItem order, string searchString)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+        if (order.Client.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (order.Car.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (order.Status.GetDisplayName()!.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        return false;
     }
 }

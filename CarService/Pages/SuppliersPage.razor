@@ -21,6 +21,7 @@
         <MudGrid>
             <MudItem><MudText Typo="Typo.h6" Class="fw-bold" Color="Color.Primary">ПОСТАВЩИКИ</MudText></MudItem>
             <MudSpacer/>
+            <MudTextField Adornment="Adornment.Start" IconSize="Size.Medium" AdornmentIcon="@Icons.Material.Filled.Search" T="string" Label="Поиск" @bind-Value="_searchText"></MudTextField>
             <MudItem>
                 <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@OpenCreateSupplierDialog">
                     <MudText Typo="Typo.button" Class="fw-bold">ДОБАВИТЬ</MudText>
@@ -28,7 +29,7 @@
             </MudItem>
         </MudGrid>  
 
-        <MudTable Class="mt-5" Items="@_suppliers" Hover="true" Breakpoint="Breakpoint.Sm">
+        <MudTable T="SupplierTableItem" Filter="new Func<SupplierTableItem,bool>(SearchTextFilter)" Class="mt-5" Items="@_suppliers" Hover="true" Breakpoint="Breakpoint.Sm">
             <HeaderContent>
                 <MudTh>Наименование</MudTh>
                 <MudTh>ИНН</MudTh>
@@ -54,6 +55,7 @@
 
 @code {
     private List<SupplierTableItem>? _suppliers;
+    private string _searchText = "";
 
     protected async override Task OnInitializedAsync()
     {
@@ -96,5 +98,18 @@
         {
             await FillList();
         }
+    }
+
+    private bool SearchTextFilter(SupplierTableItem supplier) => FilterFunc(supplier, _searchText);
+
+    private bool FilterFunc(SupplierTableItem supplier, string searchString)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+        if (supplier.Name!.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (supplier.Inn!.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        return false;
     }
 }

@@ -33,6 +33,7 @@
             <MudGrid>
                 <MudItem><MudText Typo="Typo.h6" Class="fw-bold" Color="Color.Primary">ЗАКАЗЫ ПОСТАВЩИКАМ</MudText></MudItem>
                 <MudSpacer/>
+                <MudTextField Adornment="Adornment.Start" IconSize="Size.Medium" AdornmentIcon="@Icons.Material.Filled.Search" T="string" Label="Поиск" @bind-Value="_searchText"></MudTextField>
                 @if (UserService.CurrentUser.Role == Roles.Manager || UserService.CurrentUser.Role == Roles.Admin)
                 {
                      <MudItem>
@@ -43,7 +44,7 @@
                 }
             </MudGrid>  
 
-            <MudTable SelectedItemChanged="@SelectSupplier" T="SupplierOrderTableItem" Class="mt-5" Items="@_orders" Hover="true" Breakpoint="Breakpoint.Sm">
+            <MudTable T="SupplierOrderTableItem" Filter="new Func<SupplierOrderTableItem,bool>(SearchTextFilter)" SelectedItemChanged="@SelectSupplier" T="SupplierOrderTableItem" Class="mt-5" Items="@_orders" Hover="true" Breakpoint="Breakpoint.Sm">
                 <HeaderContent>
                     <MudTh><MudTableSortLabel SortBy="new Func<SupplierOrderTableItem, object>(x=>x.CreatedDate)">Дата заказа</MudTableSortLabel></MudTh>
                     <MudTh><MudTableSortLabel SortBy="new Func<SupplierOrderTableItem, object>(x=>x.Supplier)">Поставщик</MudTableSortLabel></MudTh>
@@ -65,6 +66,7 @@
 @code {
     private List<SupplierOrderTableItem>? _orders;
     private bool _loading = true;
+    private string _searchText = "";
 
     protected async override Task OnInitializedAsync()
     {
@@ -78,7 +80,7 @@
     {
         var res = await OrderService.GetAllSuppliersOrdersAsync();
 
-        _orders = res.Data!;
+        _orders = res.Data!.OrderByDescending(x => x.CreatedDate).ToList();
 
         _loading = false;
     }
@@ -106,5 +108,16 @@
         parameters.Add("OrderId",order.Id);
         var dialog = await DialogService.ShowAsync<CreateSupplierOrderDialog>("Заказ поставщику", parameters, options: maxWidth);
         var res = await dialog.Result;
+    }
+
+    private bool SearchTextFilter(SupplierOrderTableItem order) => FilterFunc(order, _searchText);
+
+    private bool FilterFunc(SupplierOrderTableItem order, string searchString)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+        if (order.Supplier!.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        return false;
     }
 }
