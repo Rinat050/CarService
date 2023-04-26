@@ -17,29 +17,41 @@
     {
         <MudAlert Variant="Variant.Outlined" ContentAlignment="HorizontalAlignment.Center" Severity="Severity.Warning">Необходимо авторизоваться!</MudAlert>
     }
-    else if(UserService.CurrentUser.Role is Domain.Enums.Roles.Admin){
+    else if(UserService.CurrentUser.Role is Domain.Enums.Roles.Admin ||
+            UserService.CurrentUser.Role is Domain.Enums.Roles.Mechanic ||
+            UserService.CurrentUser.Role is Domain.Enums.Roles.Diagnostician)
+    {
         <MudGrid>
             <MudItem><MudText Typo="Typo.h6" Class="fw-bold" Color="Color.Primary">НЕИСПРАВНОСТИ</MudText></MudItem>
             <MudSpacer/>
-            <MudTextField Adornment="Adornment.Start" IconSize="Size.Medium" AdornmentIcon="@Icons.Material.Filled.Search" T="string" Label="Поиск" @bind-Value="_searchText"></MudTextField>
-            <MudItem>
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@OpenCreateDefectDialog">
-                    <MudText Typo="Typo.button" Class="fw-bold">ДОБАВИТЬ</MudText>
-                </MudButton>
-            </MudItem>
+            <MudTextField Class="me-3" Adornment="Adornment.Start" IconSize="Size.Medium" AdornmentIcon="@Icons.Material.Filled.Search" T="string" Label="Поиск" @bind-Value="_searchText"></MudTextField>
+            @if (UserService.CurrentUser.Role is Domain.Enums.Roles.Admin)
+            {
+                <MudItem>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@OpenCreateDefectDialog">
+                        <MudText Typo="Typo.button" Class="fw-bold">ДОБАВИТЬ</MudText>
+                    </MudButton>
+                </MudItem>
+            }
         </MudGrid>  
 
         <MudTable T="Defect" Filter="new Func<Defect,bool>(SearchTextFilter)" Class="mt-5" Items="@_defects" Hover="true" Breakpoint="Breakpoint.Sm">
             <HeaderContent>
                 <MudTh>Описание</MudTh>
-                <MudTh>Изменение</MudTh>
+                @if (UserService.CurrentUser.Role is Roles.Admin)
+                {
+                    <MudTh>Изменение</MudTh>
+                }
             </HeaderContent>
             <RowTemplate>
                 <MudTd DataLabel="Описание">@context.Description</MudTd>
                 @{
                     var defect = (Defect) context;
                 }
-                <MudTd DataLabel="Изменение"><MudIconButton Icon="@Icons.Filled.Edit" Size="Size.Medium" OnClick="@(() => OpenEditDefectDialog(defect))"></MudIconButton></MudTd>
+                @if (UserService.CurrentUser.Role is Roles.Admin)
+                {
+                    <MudTd DataLabel="Изменение"><MudIconButton Icon="@Icons.Filled.Edit" Size="Size.Medium" OnClick="@(() => OpenEditDefectDialog(defect))"></MudIconButton></MudTd>
+                }
             </RowTemplate>
         </MudTable>
     }

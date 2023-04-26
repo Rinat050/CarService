@@ -33,17 +33,20 @@
             <MudGrid>
                 <MudItem><MudText Typo="Typo.h6" Class="fw-bold" Color="Color.Primary">ЗАКАЗ-НАРЯД</MudText></MudItem>
                 <MudSpacer/>
-                <MudItem>
-                    <MudButton Variant="Variant.Filled" OnClick="@(() => SaveChanges())" Color="Color.Primary">
-                        <MudText Typo="Typo.button" Class="fw-bold">СОХРАНИТЬ</MudText>
-                    </MudButton>
-                </MudItem>
+                @if (UserService.CurrentUser.Role is Roles.Admin || (_order.Status is not OrderStatus.Completed && _order.Status is not OrderStatus.RegectedByClient))
+                {
+                    <MudItem>
+                        <MudButton Variant="Variant.Filled" OnClick="@(() => SaveChanges())" Color="Color.Primary">
+                            <MudText Typo="Typo.button" Class="fw-bold">СОХРАНИТЬ</MudText>
+                        </MudButton>
+                    </MudItem>
+                }               
             </MudGrid>  
 
             <MudGrid Spacing="5" Class="align-items-center" Justify="Justify.FlexStart">
                 <MudItem><MudText Class="fs-6" Color="Color.Default">Дата создания: @(_order.CreatedDate)</MudText></MudItem>
                 <MudItem>
-                    @if (_order.Status is OrderStatus.Completed || _order.Status is OrderStatus.RegectedByClient)
+                    @if (UserService.CurrentUser.Role is not Roles.Admin && (_order.Status is OrderStatus.Completed || _order.Status is OrderStatus.RegectedByClient))
                     {
                         <MudText Class="fs-6" Color="Color.Default">Статус: @(_order.Status.GetDisplayName())</MudText>
                     }
@@ -54,6 +57,7 @@
                             {
                                 <MudSelectItem Value="OrderStatus.Completed"></MudSelectItem>
                                 <MudSelectItem Value="OrderStatus.RegectedByClient"></MudSelectItem>
+                            
                             }
                             else if(UserService.CurrentUser.Role == Roles.Diagnostician)
                             {
@@ -61,6 +65,15 @@
                             }
                             else if(UserService.CurrentUser.Role == Roles.Mechanic)
                             {
+                                <MudSelectItem Value="OrderStatus.InWork"></MudSelectItem>
+                                <MudSelectItem Value="OrderStatus.ClosedByWork"></MudSelectItem>
+                            }
+                            else
+                            {   
+                                <MudSelectItem Value="OrderStatus.Created"></MudSelectItem>
+                                <MudSelectItem Value="OrderStatus.Completed"></MudSelectItem>
+                                <MudSelectItem Value="OrderStatus.RegectedByClient"></MudSelectItem>
+                                <MudSelectItem Value="OrderStatus.Diagnosed"></MudSelectItem>
                                 <MudSelectItem Value="OrderStatus.InWork"></MudSelectItem>
                                 <MudSelectItem Value="OrderStatus.ClosedByWork"></MudSelectItem>
                             }

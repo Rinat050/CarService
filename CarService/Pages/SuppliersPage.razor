@@ -21,7 +21,7 @@
         <MudGrid>
             <MudItem><MudText Typo="Typo.h6" Class="fw-bold" Color="Color.Primary">ПОСТАВЩИКИ</MudText></MudItem>
             <MudSpacer/>
-            <MudTextField Adornment="Adornment.Start" IconSize="Size.Medium" AdornmentIcon="@Icons.Material.Filled.Search" T="string" Label="Поиск" @bind-Value="_searchText"></MudTextField>
+            <MudTextField Class="me-3" Adornment="Adornment.Start" IconSize="Size.Medium" AdornmentIcon="@Icons.Material.Filled.Search" T="string" Label="Поиск" @bind-Value="_searchText"></MudTextField>
             <MudItem>
                 <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@OpenCreateSupplierDialog">
                     <MudText Typo="Typo.button" Class="fw-bold">ДОБАВИТЬ</MudText>
