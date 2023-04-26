@@ -9,6 +9,8 @@ namespace CarService.Domain.Services.Interfaces
 
         public Task<BaseResponse<List<SupplierOrderTableItem>>> GetAllSuppliersOrdersAsync();
 
+        public Task<BaseResponse<List<SupplierOrderTableItem>>> GetSuppliersOrdersByDateAsync(DateTime from, DateTime to);
+
         public Task<BaseResponse<SupplierOrder>> GetSupplierOrderByIdAsync(string id);
     }
 }

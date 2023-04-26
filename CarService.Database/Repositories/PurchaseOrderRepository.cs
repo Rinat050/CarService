@@ -57,6 +57,27 @@ namespace CarService.Database.Repositories
                 }).ToList<PurchaseOrderTableItem>();
         }
 
+        public async Task<List<PurchaseOrderTableItem>> GetPurchaseOrdersByDateAsync(DateTime from, DateTime to)
+        {
+            var purchaseOrders = await _purchaseOrders
+                .FindAsync<PurchaseOrderDb>(x => x.CreatedDate >= from && x.CreatedDate <= to);
+
+            return purchaseOrders
+                .ToEnumerable()
+                .Select(x => new PurchaseOrderTableItem()
+                {
+                    PurchaseOrderId = x.Id.ToString(),
+                    Client = $"{_clientRepository.GetClientById(x.ClientId).Surname} " +
+                    $"{_clientRepository.GetClientById(x.ClientId).Name}",
+                    CreatedDate = x.CreatedDate,
+                    Car = _carRepository.GetCarById(x.CarId).Model.Brand.Name + " "
+                        + _carRepository.GetCarById(x.CarId).Model.Name + " "
+                        + _carRepository.GetCarById(x.CarId).StateNumber,
+                    TotalCost = GetTotalCost(x.CompletedWorks, x.SpareParts),
+                    Status = (OrderStatus)x.Status,
+                }).ToList<PurchaseOrderTableItem>();
+        }
+
         public PurchaseOrder GetPurchaseOrderById(string id)
         {
             var filter = Builders<PurchaseOrderDb>.Filter.Eq("_id", new ObjectId(id));

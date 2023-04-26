@@ -102,6 +102,28 @@ namespace CarService.Domain.Services
             }
         }
 
+        public async Task<BaseResponse<List<SupplierOrderTableItem>>> GetSuppliersOrdersByDateAsync(DateTime from, DateTime to)
+        {
+            try
+            {
+                var suppliers = await _orderRepository.GetSuppliersOrdersByDateAsync(from, to);
+
+                return new BaseResponse<List<SupplierOrderTableItem>>()
+                {
+                    Success = true,
+                    Data = suppliers
+                };
+            }
+            catch
+            {
+                return new BaseResponse<List<SupplierOrderTableItem>>()
+                {
+                    Success = false,
+                    Description = "Внутренняя ошибка!"
+                };
+            }
+        }
+
         private async Task<bool> ChangeSparePartsCountAsync(List<SparePartListItem> spareParts)
         {
             if (spareParts != null)

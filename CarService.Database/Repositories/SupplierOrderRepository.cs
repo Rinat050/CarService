@@ -83,6 +83,22 @@ namespace CarService.Database.Repositories
             return null;
         }
 
+        public async Task<List<SupplierOrderTableItem>> GetSuppliersOrdersByDateAsync(DateTime from, DateTime to)
+        {
+            var orders = await _orders
+                .FindAsync<SupplierOrderDb>(x => x.CreatedDate >= from && x.CreatedDate <= to);
+
+            return orders
+                .ToEnumerable()
+                .Select(x => new SupplierOrderTableItem()
+                {
+                    Id = x.Id.ToString(),
+                    CreatedDate = x.CreatedDate,
+                    Supplier = _supplierRepository.GetSupplierNameByIdAsync(x.SupplierId),
+                    TotalCost = GetTotalCost(x.SpareParts),
+                }).ToList<SupplierOrderTableItem>();
+        }
+
         private int GetTotalCost(List<SparePartListItemDb>? spareParts)
         {
             int sparePartsRes = 0;

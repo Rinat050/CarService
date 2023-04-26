@@ -74,6 +74,28 @@ namespace CarService.Domain.Services
             };
         }
 
+        public async Task<BaseResponse<List<PurchaseOrderTableItem>>> GetPurchaseOrdersByDateAsync(DateTime from, DateTime to)
+        {
+            try
+            {
+                var orders = await _orderRepository.GetPurchaseOrdersByDateAsync(from, to);
+
+                return new BaseResponse<List<PurchaseOrderTableItem>>()
+                {
+                    Success = true,
+                    Data = orders
+                };
+            }
+            catch
+            {
+                return new BaseResponse<List<PurchaseOrderTableItem>>()
+                {
+                    Success = false,
+                    Description = "Внутренняя ошибка!"
+                };
+            };
+        }
+
         public async Task<BaseResponse<PurchaseOrder>> GetPurchaseOrderByIdAsync(string id)
         {
             try

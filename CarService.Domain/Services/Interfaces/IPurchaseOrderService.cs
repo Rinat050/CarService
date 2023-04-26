@@ -12,6 +12,8 @@ namespace CarService.Domain.Services.Interfaces
 
         public Task<BaseResponse<List<PurchaseOrderTableItem>>> GetAllPurchaseOrdersAsync();
 
+        public Task<BaseResponse<List<PurchaseOrderTableItem>>> GetPurchaseOrdersByDateAsync(DateTime from, DateTime to);
+
         public Task<BaseResponse<List<PurchaseOrderTableItem>>> GetPurchaseOrdersByDiagnosticianIdAsync(string diagnosticianId);
 
         public Task<BaseResponse<List<PurchaseOrderTableItem>>> GetPurchaseOrdersByMechanicIdAsync(string mechanicId);
