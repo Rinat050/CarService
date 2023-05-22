@@ -274,5 +274,17 @@ namespace CarService.Database.Repositories
                     Status = (OrderStatus)x.Status,
                 }).ToList<PurchaseOrderTableItem>();
         }
+
+        public async Task<List<PurchaseOrder>> GetPurchaseOrdersInfoByDateAsync(DateTime from, DateTime to)
+        {
+            var purchaseOrders = await _purchaseOrders
+               .FindAsync<PurchaseOrderDb>(x => x.CreatedDate >= from && x.CreatedDate <= to
+                                           && x.Status == (int)OrderStatus.Completed);
+
+            return purchaseOrders
+                .ToEnumerable()
+                .Select(x => GetPurchaseOrder(x))
+                .ToList();
+        }
     }
 }

@@ -78,7 +78,7 @@ namespace CarService.Domain.Services
         {
             try
             {
-                var orders = await _orderRepository.GetPurchaseOrdersByDateAsync(from, to);
+                List<PurchaseOrderTableItem> orders = await _orderRepository.GetPurchaseOrdersByDateAsync(from, to);
 
                 return new BaseResponse<List<PurchaseOrderTableItem>>()
                 {
@@ -89,6 +89,28 @@ namespace CarService.Domain.Services
             catch
             {
                 return new BaseResponse<List<PurchaseOrderTableItem>>()
+                {
+                    Success = false,
+                    Description = "Внутренняя ошибка!"
+                };
+            };
+        }
+
+        public async Task<BaseResponse<List<PurchaseOrder>>> GetPurchaseOrdersInfoByDateAsync(DateTime from, DateTime to)
+        {
+            try
+            {
+                var orders = await _orderRepository.GetPurchaseOrdersInfoByDateAsync(from, to);
+
+                return new BaseResponse<List<PurchaseOrder>>()
+                {
+                    Success = true,
+                    Data = orders
+                };
+            }
+            catch
+            {
+                return new BaseResponse<List<PurchaseOrder>>()
                 {
                     Success = false,
                     Description = "Внутренняя ошибка!"

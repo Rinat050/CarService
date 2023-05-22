@@ -62,5 +62,61 @@ namespace CarService.Domain.Services
                 };
             }
         }
+
+        public async Task<BaseResponse<RepairsReport>> GetRepairsReportAsync(DateTime from, DateTime to)
+        {
+            try
+            {
+                var purchaseOrders = await _purchaseOrderService.GetPurchaseOrdersInfoByDateAsync(from, to);
+
+                if (!purchaseOrders.Success)
+                {
+                    return new BaseResponse<RepairsReport>()
+                    {
+                        Success = false,
+                        Description = "Не удалось составить отчет!"
+                    };
+                }
+                var report = new RepairsReport();
+
+                foreach(var order in purchaseOrders.Data!)
+                {
+                    foreach (var work in order.CompletedWorks!)
+                    {
+                        var existRepair = report.ReportInfo
+                                .FirstOrDefault(z => z.Repair.Id == work.Repair.Id);
+
+                        if (existRepair != null)
+                        {
+                            existRepair.Count += work.Count;
+                            existRepair.TotalCost += work.Count * work.Price;
+                        }
+                        else
+                        {
+                            report.ReportInfo.Add(new RepairsReportItem()
+                            {
+                                Repair = work.Repair,
+                                Count = work.Count,
+                                TotalCost = work.Count * work.Price
+                            });
+                        }
+                    }
+                }
+
+                return new BaseResponse<RepairsReport>()
+                {
+                    Success = true,
+                    Data = report
+                };
+            }
+            catch
+            {
+                return new BaseResponse<RepairsReport>()
+                {
+                    Success = false,
+                    Description = "Внутренняя ошибка!"
+                };
+            }
+        }
     }
 }
