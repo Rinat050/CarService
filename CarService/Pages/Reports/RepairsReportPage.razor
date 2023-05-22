@@ -1,0 +1,100 @@
+﻿@page "/repairsReport"
+@using CarService.Domain.Models
+@using CarService.Domain.Services.Interfaces
+
+@inject IUserService UserService
+@inject IReportService ReportService
+@inject ISnackbar Snackbar
+
+<PageTitle>Отчет</PageTitle>
+
+<MudPaper Class="m-2 p-3" Elevation="3">
+    @if (UserService.CurrentUser is null)
+    {
+        <MudAlert Variant="Variant.Outlined" ContentAlignment="HorizontalAlignment.Center" Severity="Severity.Warning">Необходимо авторизоваться!</MudAlert>
+    }
+    else if (UserService.CurrentUser.Role is Domain.Enums.Roles.Admin)
+    {  
+        <MudGrid>
+            <MudItem><MudText Typo="Typo.h6" Class="fw-bold mt-2" Color="Color.Primary">Отчет по выполненным ремонтным работам</MudText></MudItem>
+            <MudSpacer/>
+            <MudDateRangePicker @ref="_picker" @bind-DateRange="_period" Label="Период:" Elevation="12" Rounded="true">
+                 <PickerActions>
+                    <MudButton Color="Color.Primary" OnClick="@(() => LoadReport())">Выбрать</MudButton>
+                </PickerActions>
+            </MudDateRangePicker>
+        </MudGrid>  
+
+        @if (_loading)
+        {
+            <MudProgressCircular Color="Color.Primary" Size="Size.Medium" Indeterminate="true"></MudProgressCircular>
+        }
+        else
+        {
+            if (_report != null)
+            { 
+                <MudTable Class="mt-4" Elevation="4" Items="@_report.ReportInfo" Hover="true" Breakpoint="Breakpoint.Sm">
+                    <HeaderContent>
+                        <MudTh><strong>Ремонтная работа</strong></MudTh>   
+                        <MudTh><strong>Количество</strong></MudTh>
+                        <MudTh><strong>Итоговая сумма</strong></MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Ремонтная работа">@context.Repair.Description</MudTd>
+                        <MudTd DataLabel="Количество">@context.Count</MudTd>
+                        <MudTd DataLabel="Итоговая сумма">@context.TotalCost.ToString() руб.</MudTd>
+                    </RowTemplate>
+                    <FooterContent>
+                        <MudTh Class="mud-table-cell-custom-group mud-table-cell-custom-group-footer" colspan="3"><MudText Class="fw-bold fs-6">Итого: <MudText Inline Class="fw-bold fs-6" Color="Color.Success">@_repairsTotalCost руб.</MudText></MudText></MudTh>
+                    </FooterContent>
+                </MudTable>
+            }
+        }
+    }
+    else
+    {
+        <MudAlert Variant="Variant.Outlined" ContentAlignment="HorizontalAlignment.Center" Severity="Severity.Warning">Недостаточно прав!</MudAlert>
+    }
+</MudPaper>
+
+@code {
+    private bool _loading = false;
+    private MudDateRangePicker _picker = null;
+    private RepairsReport _report = null;
+    private DateRange _period = new DateRange()
+    {
+        Start = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1),
+        End = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.DaysInMonth(DateTime.Now.Year, DateTime.Now.Month))
+    };
+    private int _repairsTotalCost => _report.ReportInfo.Sum(x => x.TotalCost);
+
+    protected override async Task OnInitializedAsync()
+    {
+        await FillData();
+    }
+
+    private async Task FillData()
+    {
+        _loading = true;
+
+        var report = await ReportService.GetRepairsReportAsync(_period.Start ?? DateTime.Now, _period.End ?? DateTime.Now);
+
+        if (report.Success)
+        {
+            _report = report.Data!;
+        }
+        else
+        {
+            Snackbar.Add(report.Description, Severity.Error);
+        }
+
+        _loading = false;
+    }
+
+    private async Task LoadReport()
+    {
+        _picker.Close();
+        await FillData();
+        StateHasChanged();
+    }
+}

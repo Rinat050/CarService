@@ -77,7 +77,10 @@ namespace CarService.Domain.Services
                         Description = "Не удалось составить отчет!"
                     };
                 }
-                var report = new RepairsReport();
+                var report = new RepairsReport()
+                {
+                    ReportInfo = new()
+                };
 
                 foreach(var order in purchaseOrders.Data!)
                 {
