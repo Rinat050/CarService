@@ -60,7 +60,8 @@ namespace CarService.Database.Repositories
         public async Task<List<PurchaseOrderTableItem>> GetPurchaseOrdersByDateAsync(DateTime from, DateTime to)
         {
             var purchaseOrders = await _purchaseOrders
-                .FindAsync<PurchaseOrderDb>(x => x.CreatedDate >= from && x.CreatedDate <= to);
+                .FindAsync<PurchaseOrderDb>(x => x.CreatedDate >= from && x.CreatedDate <= to 
+                                            && x.Status == (int)OrderStatus.Completed);
 
             return purchaseOrders
                 .ToEnumerable()

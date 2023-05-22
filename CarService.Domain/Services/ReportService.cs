@@ -33,13 +33,13 @@ namespace CarService.Domain.Services
 
                 var report = new CashFlowReport()
                 {
-                    PurchaseOrdersInfo = purchaseOrdersResult.Data.Select(x => new PurchaseOrderReportItem()
+                    PurchaseOrdersInfo = purchaseOrdersResult.Data!.Select(x => new PurchaseOrderReportItem()
                     {
                         PurchaseOrderId = x.PurchaseOrderId,
                         CreatedDate = x.CreatedDate,
                         TotalCost = x.TotalCost,
                     }).ToList(),
-                    SupplierOrdersInfo = supplierOrdersResult.Data.Select(x => new SupplierOrderReportItem()
+                    SupplierOrdersInfo = supplierOrdersResult.Data!.Select(x => new SupplierOrderReportItem()
                     {
                         Id = x.Id,
                         TotalCost = x.TotalCost,

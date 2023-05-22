@@ -1,0 +1,129 @@
+﻿@page "/cashFlowReport"
+@using CarService.Domain.Models
+@using CarService.Domain.Services.Interfaces
+
+@inject IUserService UserService
+@inject IReportService ReportService
+@inject ISnackbar Snackbar
+
+<PageTitle>Отчет</PageTitle>
+
+<MudPaper Class="m-2 p-3" Elevation="3">
+    @if (UserService.CurrentUser is null)
+    {
+        <MudAlert Variant="Variant.Outlined" ContentAlignment="HorizontalAlignment.Center" Severity="Severity.Warning">Необходимо авторизоваться!</MudAlert>
+    }
+    else if (UserService.CurrentUser.Role is Domain.Enums.Roles.Admin)
+    {  
+        <MudGrid>
+            <MudItem><MudText Typo="Typo.h6" Class="fw-bold mt-2" Color="Color.Primary">Отчет по доходам и расходам</MudText></MudItem>
+            <MudSpacer/>
+            <MudDateRangePicker @ref="_picker" @bind-DateRange="_period" Label="Период:" Elevation="12" Rounded="true">
+                 <PickerActions>
+                    <MudButton Color="Color.Primary" OnClick="@(() => LoadReport())">Выбрать</MudButton>
+                </PickerActions>
+            </MudDateRangePicker>
+        </MudGrid>  
+
+        @if (_loading)
+        {
+            <MudProgressCircular Color="Color.Primary" Size="Size.Medium" Indeterminate="true"></MudProgressCircular>
+        }
+        else
+        {
+            if (_report != null)
+            {
+                <MudText Class="fw-bold ms-1 mt-4 fs-6">Прибыль: <MudText Inline Class="fw-bold fs-6" Color="Color.Success">@(_purchaseOrdersTotalCost-_supplierOrdersTotalCost) руб.</MudText></MudText>
+                <MudExpansionPanels Class="mt-4" Elevation="4" MultiExpansion="true">
+                    <MudExpansionPanel>   
+                        <TitleContent>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <MudText><strong>Доходы</strong></MudText>
+                                <MudText Class="fw-bold fs-6">Итого: <MudText Inline Class="fw-bold fs-6" Color="Color.Success">@_purchaseOrdersTotalCost руб.</MudText></MudText>     
+                            </div>
+                        </TitleContent>
+                        <ChildContent>
+                            <MudTable Items="@_report.PurchaseOrdersInfo" Hover="true" Breakpoint="Breakpoint.Sm">
+                                <HeaderContent>
+                                    <MudTh><strong>Заказ-наряд</strong></MudTh>   
+                                    <MudTh><strong>Сумма</strong></MudTh>
+                                </HeaderContent>
+                                <RowTemplate>
+                                    <MudTd DataLabel="Заказ-наряд">Заказ-наряд от @context.CreatedDate.ToString()</MudTd>
+                                    <MudTd DataLabel="Сумма">@context.TotalCost.ToString() руб.</MudTd>
+                                </RowTemplate>
+                            </MudTable>
+                        </ChildContent>
+                    </MudExpansionPanel>
+                    <MudExpansionPanel>   
+                        <TitleContent>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <MudText><strong>Расходы</strong></MudText>
+                                <MudText Class="fw-bold fs-6">Итого: <MudText Inline Class="fw-bold fs-6" Color="Color.Error">-@_supplierOrdersTotalCost руб.</MudText></MudText>   
+                            </div>
+                        </TitleContent>
+                        <ChildContent>
+                            <MudTable Items="@_report.SupplierOrdersInfo" Hover="true" Breakpoint="Breakpoint.Sm">
+                                <HeaderContent>
+                                    <MudTh><strong>Заказ поставщику</strong></MudTh>   
+                                    <MudTh><strong>Сумма</strong></MudTh>
+                                </HeaderContent>
+                                <RowTemplate>
+                                    <MudTd DataLabel="Заказ-наряд">Заказ поставщику от @context.CreatedDate.ToString()</MudTd>
+                                    <MudTd DataLabel="Сумма">@context.TotalCost.ToString() руб.</MudTd>
+                                </RowTemplate>
+                            </MudTable>
+                        </ChildContent>
+                    </MudExpansionPanel>
+                </MudExpansionPanels>
+            }
+        }
+    }
+    else
+    {
+        <MudAlert Variant="Variant.Outlined" ContentAlignment="HorizontalAlignment.Center" Severity="Severity.Warning">Недостаточно прав!</MudAlert>
+    }
+</MudPaper>
+
+@code {
+    private bool _loading = false;
+    private MudDateRangePicker _picker = null;
+    private CashFlowReport _report = null;
+    private DateRange _period = new DateRange()
+    {
+        Start = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1),
+        End = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.DaysInMonth(DateTime.Now.Year, DateTime.Now.Month))
+    };
+    private int _purchaseOrdersTotalCost => _report.PurchaseOrdersInfo.Sum(x => x.TotalCost);
+    private int _supplierOrdersTotalCost => _report.SupplierOrdersInfo.Sum(x => x.TotalCost);
+
+    protected override async Task OnInitializedAsync()
+    {
+        await FillData();
+    }
+
+    private async Task FillData()
+    {
+        _loading = true;
+
+        var report = await ReportService.GetCashFlowReportAsync(_period.Start ?? DateTime.Now, _period.End ?? DateTime.Now);
+
+        if (report.Success)
+        {
+            _report = report.Data;
+        }
+        else
+        {
+            Snackbar.Add(report.Description, Severity.Error);
+        }
+
+        _loading = false;
+    }
+
+    private async Task LoadReport()
+    {
+        _picker.Close();
+        await FillData();
+        StateHasChanged();
+    }
+}
